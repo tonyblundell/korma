@@ -47,6 +47,14 @@ class Model {
                 $arr[$field_name] = $this->{$field_name};
             }
         }
+        if (isset(static::$relations)) {
+            foreach(static::$relations as $relation) {
+                list($model_field, $id_field, $class) = $relation;
+                if (isset($this->{$model_field})) {
+                    $arr[$id_field] = $this->{$model_field}->id;
+                }
+            }
+        }
         return $arr;
     }
 
@@ -69,6 +77,19 @@ class Model {
         foreach(static::$fields as $field_name => $field_type) {
             settype($instance->{$field_name}, $field_type);
         }
+        if (isset(static::$relations)) {
+            foreach(static::$relations as $relation) {
+                list($model_field, $id_field, $class) = $relation;
+                if (isset($instance->{$id_field})) {
+                    $instance->{$model_field} = $class::get_one(
+                        array('id__eq'=>$instance->{$id_field})
+                    );
+                }
+                if ($id_field !== $model_field) {
+                    unset($instance->{$id_field});
+                }
+            }
+        }
         return $instance;
     }
 
@@ -76,18 +97,23 @@ class Model {
         return array_map(array('static', 'record_to_instance'), $record_array);
     }
 
-    private static function get_moodlified_table_name() {
-        return '{'.static::$table.'}';
+    private static function get_moodlified_table_name($table) {
+        return '{'.$table.'}';
     }
 
     private static function get_tables_sql() {
-        $table = static::get_moodlified_table_name();
-        $tables = array($table);
+        $tables = array();
+        array_push($tables, static::get_moodlified_table_name(static::$table));
+        if (property_exists(get_called_class(), 'relation')) {
+            foreach(static::$relations as $relation => $column) {
+                array_push($tables, $static::get_moodlifield_table_name($relation));
+            }
+        }
         return 'FROM '.implode(', ', $tables);
     }
 
     private static function parse_clause($field, $value) {
-        $table = static::get_moodlified_table_name();
+        $table = static::get_moodlified_table_name(static::$table);
         $exploded = explode('__', $field);
         $clause = $exploded[count($exploded)-1];
         $field = $exploded[count($exploded)-2];
@@ -130,16 +156,22 @@ class Model {
     }
 
     private static function get_select_sql() {
-        $table = static::get_moodlified_table_name();
+        $table = static::get_moodlified_table_name(static::$table);
         $fields = array();
         foreach(static::$fields as $field_name => $field_type) {
             $fields[] = "$table.$field_name";
+        }
+        if (isset(static::$relations)) {
+            foreach(static::$relations as $relation) {
+                list($model_field, $id_field, $class) = $relation;
+                $fields[] = "$table.$id_field";
+            }
         }
         return 'SELECT '.implode(', ', $fields);
     }
 
     private static function get_order_sql() {
-        return 'ORDER BY '.static::get_moodlified_table_name();
+        return 'ORDER BY '.static::get_moodlified_table_name(static::$table);
     }
 
     private static function get_get_sql($clause_lists) {
