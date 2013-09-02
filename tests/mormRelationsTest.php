@@ -25,17 +25,17 @@ class Course_R extends Model {
 
 class CourseCompletion_R extends Model {
     protected static $table = 'course_completions';
-    protected static $relations = array(
-        array('user', 'userid', 'User_R'),
-        array('course', 'course', 'Course_R')
-    );
     protected static $fields = array(
         'id' => 'integer'
+    );
+    protected static $relations_single = array(
+        array('user', 'userid', 'User_R'),
+        array('course', 'course', 'Course_R')
     );
 }
 
 
-class morm_relations_test extends advanced_testcase {
+class morm_relations_single_test extends advanced_testcase {
 
     protected function setUp() {
         $this->resetAfterTest();
