@@ -75,7 +75,7 @@ class morm_get_one_test extends advanced_testcase {
         global $DB;
         $DB->delete_records('user');
         $got = User_GO::get_one();
-        $this->assertEquals(false, $got);
+        $this->assertTrue($got===NULL);
     }
 
     public function test_get_one_condition_equals() {

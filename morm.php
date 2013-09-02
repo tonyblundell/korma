@@ -29,7 +29,6 @@ class Model {
         if ($record) {
             return static::record_to_instance($record);
         }
-        return false;
     }
 
     public function __construct($attrs=NULL) {
