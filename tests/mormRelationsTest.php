@@ -43,7 +43,7 @@ class morm_relations_single_test extends advanced_testcase {
     }
 
     public function test_one_to_many_rels() {
-        // Create a user, course and course completion
+        // Create users, a course and course completion
         $john = $this->gen->create_user(array('username'=>'john'));
         $paul = $this->gen->create_user(array('username'=>'paul'));
         $help = $this->gen->create_course(array('shortname'=>'Help!'));
