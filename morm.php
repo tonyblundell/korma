@@ -46,8 +46,8 @@ class Model {
                 $arr[$field_name] = $this->{$field_name};
             }
         }
-        if (isset(static::$relations_single)) {
-            foreach(static::$relations_single as $relation) {
+        if (isset(static::$relations)) {
+            foreach(static::$relations as $relation) {
                 list($model_field, $id_field, $class) = $relation;
                 if (isset($this->{$model_field})) {
                     $arr[$id_field] = $this->{$model_field}->id;
@@ -76,8 +76,8 @@ class Model {
         foreach(static::$fields as $field_name => $field_type) {
             settype($instance->{$field_name}, $field_type);
         }
-        if (isset(static::$relations_single)) {
-            foreach(static::$relations_single as $relation) {
+        if (isset(static::$relations)) {
+            foreach(static::$relations as $relation) {
                 list($model_field, $id_field, $class) = $relation;
                 if (isset($instance->{$id_field})) {
                     $instance->{$model_field} = $class::get_one(
@@ -104,7 +104,7 @@ class Model {
         $tables = array();
         array_push($tables, static::get_moodlified_table_name(static::$table));
         if (property_exists(get_called_class(), 'relation')) {
-            foreach(static::$relations_single as $relation => $column) {
+            foreach(static::$relations as $relation => $column) {
                 array_push($tables, $static::get_moodlifield_table_name($relation));
             }
         }
@@ -160,8 +160,8 @@ class Model {
         foreach(static::$fields as $field_name => $field_type) {
             $fields[] = "$table.$field_name";
         }
-        if (isset(static::$relations_single)) {
-            foreach(static::$relations_single as $relation) {
+        if (isset(static::$relations)) {
+            foreach(static::$relations as $relation) {
                 list($model_field, $id_field, $class) = $relation;
                 $fields[] = "$table.$id_field";
             }
