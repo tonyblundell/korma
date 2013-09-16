@@ -48,9 +48,9 @@ class Model {
         }
         if (isset(static::$relations)) {
             foreach(static::$relations as $relation) {
-                list($model_field, $id_field, $class) = $relation;
-                if (isset($this->{$model_field})) {
-                    $arr[$id_field] = $this->{$model_field}->id;
+                list($rel_name, $rel_field, $rel_class) = $relation;
+                if (isset($this->{$rel_name})) {
+                    $arr[$rel_field] = $this->{$rel_name}->id;
                 }
             }
         }
@@ -71,6 +71,17 @@ class Model {
         }
     }
 
+    public function get_related($rel_name) {
+        foreach(static::$reverse_relations as $rev_rel) {
+            list($rev_rel_name, $rev_rel_field, $rev_rel_class) = $rev_rel;
+            if ($rev_rel_name === $rel_name) {
+                return $rev_rel_class::get(
+                    array($rev_rel_field.'__eq'=>$this->id)
+                );
+            }
+        }
+    }
+
     private static function record_to_instance($record) {
         $instance = new static((array)$record);
         foreach(static::$fields as $field_name => $field_type) {
@@ -78,14 +89,14 @@ class Model {
         }
         if (isset(static::$relations)) {
             foreach(static::$relations as $relation) {
-                list($model_field, $id_field, $class) = $relation;
-                if (isset($instance->{$id_field})) {
-                    $instance->{$model_field} = $class::get_one(
-                        array('id__eq'=>$instance->{$id_field})
+                list($rel_name, $rel_field, $rel_class) = $relation;
+                if (isset($instance->{$rel_field})) {
+                    $instance->{$rel_name} = $rel_class::get_one(
+                        array('id__eq'=>$instance->{$rel_field})
                     );
                 }
-                if ($id_field !== $model_field) {
-                    unset($instance->{$id_field});
+                if ($rel_field !== $rel_name) {
+                    unset($instance->{$rel_field});
                 }
             }
         }
@@ -162,8 +173,8 @@ class Model {
         }
         if (isset(static::$relations)) {
             foreach(static::$relations as $relation) {
-                list($model_field, $id_field, $class) = $relation;
-                $fields[] = "$table.$id_field";
+                list($rel_name, $rel_field, $rel_class) = $relation;
+                $fields[] = "$table.$rel_field";
             }
         }
         return 'SELECT '.implode(', ', $fields);
