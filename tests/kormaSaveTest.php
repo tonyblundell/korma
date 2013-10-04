@@ -2,7 +2,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once dirname(dirname(__FILE__)) . '/morm.php';
+require_once dirname(dirname(__FILE__)) . '/korma.php';
 
 
 class User_S extends Model {
@@ -16,7 +16,7 @@ class User_S extends Model {
 }
 
 
-class morm_save_test extends advanced_testcase {
+class korma_save_test extends advanced_testcase {
 
     protected function setUp() {
         $this->resetAfterTest();

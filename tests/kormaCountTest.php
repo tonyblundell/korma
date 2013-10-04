@@ -2,7 +2,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once dirname(dirname(__FILE__)) . '/morm.php';
+require_once dirname(dirname(__FILE__)) . '/korma.php';
 
 
 class User_C extends Model {
@@ -25,7 +25,7 @@ class Course_C extends Model {
 }
 
 
-class morm_count_test extends advanced_testcase {
+class korma_count_test extends advanced_testcase {
 
     protected function setUp() {
         $this->resetAfterTest();

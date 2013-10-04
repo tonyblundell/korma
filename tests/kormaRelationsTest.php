@@ -2,7 +2,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once dirname(dirname(__FILE__)) . '/morm.php';
+require_once dirname(dirname(__FILE__)) . '/korma.php';
 
 
 class User_R extends Model {
@@ -41,7 +41,7 @@ class CourseCompletion_R extends Model {
 }
 
 
-class morm_relations_test extends advanced_testcase {
+class korma_relations_test extends advanced_testcase {
 
     protected function setUp() {
         $this->resetAfterTest();
@@ -57,7 +57,7 @@ class morm_relations_test extends advanced_testcase {
             array('user'=>$john, 'course'=>$help)
         );
         $comp->save();
-        // Pull the objects back via morm
+        // Pull the objects back via korma
         $john_from_db = User_R::get_one(array('id__eq'=>$john->id));
         $paul_from_db = User_R::get_one(array('id__eq'=>$paul->id));
         $help_from_db = Course_R::get_one(array('id__eq'=>$help->id));
@@ -96,7 +96,7 @@ class morm_relations_test extends advanced_testcase {
             array('user'=>$paul, 'course'=>$help)
         );
         $paul_help->save();
-        // Pull the objects back via morm
+        // Pull the objects back via korma
         $john_from_db = User_R::get_one(array('id__eq'=>$john->id));
         $paul_from_db = User_R::get_one(array('id__eq'=>$paul->id));
         $help_from_db = Course_r::get_one(array('id__eq'=>$help->id));
