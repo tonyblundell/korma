@@ -31,6 +31,14 @@ class Model {
         }
     }
 
+    public static function delete() {
+        global $DB;
+        return $DB->delete_records_select(
+            static::$table,
+            substr(static::get_clauses_sql(func_get_args()), 5)
+        );
+    }
+
     public function __construct($attrs=NULL) {
         if ($attrs) {
             foreach($attrs as $attr => $value) {
