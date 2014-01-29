@@ -81,6 +81,81 @@ class Model {
         }
     }
 
+    public function set_related($relation, $items) {
+        if (!is_array($items)) {
+            $items = array($items);
+        }
+        foreach ($static::$one_to_many_relations as $rel) {
+            list($rel_name, $rel_field, $rel_class) = $rel;
+            if ($rel_name == $relation) {
+                $table = static::$table;
+                $sql = "
+                    UPDATE \{$table\}
+                    SET $rel_field = NULL
+                    WHERE $rel_field = $this->id
+                ";
+                $DB->execute($sql);
+                foreach($items as $item) {
+                    $id = is_object($item) ? $item->id : $item; 
+                    $sql = "
+                        UPDATE \{$table\} 
+                        SET $rel_field = $this->id 
+                        WHERE id = $id
+                    ";
+                    $DB->execute($sql);
+                }
+                break;
+            }
+        }
+        return true;
+    }
+
+    public function add_related($relation, $items) {
+        if (!is_array($items)) {
+            $items = array($items);
+        }
+        foreach ($static::$one_to_many_relations as $rel) {
+            list($rel_name, $rel_field, $rel_class) = $rel;
+            if ($rel_name == $relation) {
+                $table = static::$table;
+                foreach($items as $item) {
+                    $id = is_object($item) ? $item->id : $item; 
+                    $sql = "
+                        UPDATE \{$table\} 
+                        SET $rel_field = $this->id 
+                        WHERE id = $id
+                    ";
+                    $DB->execute($sql);
+                }
+                break;
+            }
+        }
+        return true;
+    }
+
+    public function remove_related($relation, $items) {
+        if (!is_array($items)) {
+            $items = array($items);
+        }
+        foreach ($static::$one_to_many_relations as $rel) {
+            list($rel_name, $rel_field, $rel_class) = $rel;
+            if ($rel_name == $relation) {
+                $table = static::$table;
+                foreach($items as $item) {
+                    $id = is_object($item) ? $item->id : $item; 
+                    $sql = "
+                        UPDATE \{$table\} 
+                        SET $rel_field = NULL
+                        WHERE id = $id
+                    ";
+                }
+                $DB->execute($sql);
+                break;
+            }
+        }
+        return true;
+    }
+
     private static function generate_sql($clauses, $order, $limit, $offset) {
         $select_sql = "SELECT ";
         $from_sql = " FROM {" . static::$table . "} AS base ";
