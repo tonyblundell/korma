@@ -2,28 +2,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once dirname(dirname(__FILE__)) . '/korma.php';
-
-
-class User_GO extends Model {
-    protected static $table = 'user';
-    protected static $fields = array(
-        'id' => 'integer',
-        'username' => 'string',
-        'firstname' => 'string',
-        'lastname' => 'string'
-    );
-}
-
-
-class Course_GO extends Model {
-    protected static $table = 'course';
-    protected static $fields = array(
-        'id' => 'integer',
-        'newsitems' => 'string'
-    );
-}
-
+require_once dirname(__FILE__) . '/models.php';
 
 class korma_get_one_test extends advanced_testcase {
 
@@ -38,8 +17,8 @@ class korma_get_one_test extends advanced_testcase {
         $john = $this->gen->create_user(array(
             'username'=>'john', 'firstname'=>'John', 'lastname'=>'Lennon')
         );
-        $got = User_GO::get_one();
-        $this->assertInstanceOf('User_GO', $got);
+        $got = User::get_one();
+        $this->assertInstanceOf('User', $got);
         $this->assertEquals($john->id, $got->id);
         $this->assertEquals($john->username, $got->username);
         $this->assertEquals($john->firstname, $got->firstname);
@@ -52,7 +31,7 @@ class korma_get_one_test extends advanced_testcase {
         $john = $this->gen->create_user(array(
             'username'=>'john', 'firstname'=>'John', 'lastname'=>'Lennon')
         );
-        $got = User_GO::get_one();
+        $got = User::get_one();
         $this->assertInternalType('integer', $got->id);
         $this->assertInternalType('string', $got->username);
         $this->assertInternalType('string', $got->firstname);
@@ -64,8 +43,8 @@ class korma_get_one_test extends advanced_testcase {
         $DB->delete_records('user');
         $john = $this->gen->create_user(array('firstname'=>'John', 'lastname'=>'Lennon'));
         $paul = $this->gen->create_user(array('firstname'=>'Paul', 'lastname'=>'McCartney'));
-        $got = User_GO::get_one();
-        $this->assertInstanceOf('User_GO', $got);
+        $got = User::get_one();
+        $this->assertInstanceOf('User', $got);
         $this->assertEquals($john->id, $got->id);
         $this->assertEquals($john->firstname, $got->firstname);
         $this->assertEquals($john->lastname, $got->lastname);
@@ -74,13 +53,13 @@ class korma_get_one_test extends advanced_testcase {
     public function test_get_one_no_matches() {
         global $DB;
         $DB->delete_records('user');
-        $got = User_GO::get_one();
+        $got = User::get_one();
         $this->assertTrue($got===NULL);
     }
 
     public function test_get_one_condition_equals() {
         $john_lower = $this->gen->create_user(array('username'=>'john'));
-        $got = User_GO::get_one(array('username__eq'=>'john'));
+        $got = User::get_one(array('username__eq'=>'john'));
         $this->assertEquals($john_lower->id, $got->id);
         $this->assertEquals($john_lower->firstname, $got->firstname);
         $this->assertEquals($john_lower->lastname, $got->lastname);
@@ -88,7 +67,7 @@ class korma_get_one_test extends advanced_testcase {
     
     public function test_get_one_condition_iequals() {
         $john_upper = $this->gen->create_user(array('username'=>'John'));
-        $got = User_GO::get_one(array('username__ieq'=>'john'));
+        $got = User::get_one(array('username__ieq'=>'john'));
         $this->assertEquals($john_upper->id, $got->id);
         $this->assertEquals($john_upper->firstname, $got->firstname);
         $this->assertEquals($john_upper->lastname, $got->lastname);
@@ -98,7 +77,7 @@ class korma_get_one_test extends advanced_testcase {
         $one = $this->gen->create_course(array('newsitems'=>101));
         $two = $this->gen->create_course(array('newsitems'=>102));
         $three = $this->gen->create_course(array('newsitems'=>103));
-        $got = Course_GO::get_one(array('newsitems__gt'=>102));
+        $got = Course::get_one(array('newsitems__gt'=>102));
         $this->assertEquals($three->id, $got->id);
         $this->assertEquals($three->newsitems, $got->newsitems);
     }
@@ -107,7 +86,7 @@ class korma_get_one_test extends advanced_testcase {
         $one = $this->gen->create_course(array('newsitems'=>101));
         $two = $this->gen->create_course(array('newsitems'=>102));
         $three = $this->gen->create_course(array('newsitems'=>103));
-        $got = Course_GO::get_one(array('newsitems__gte'=>102));
+        $got = Course::get_one(array('newsitems__gte'=>102));
         $this->assertEquals($two->id, $got->id);
         $this->assertEquals($two->newsitems, $got->newsitems);
     }
@@ -118,7 +97,7 @@ class korma_get_one_test extends advanced_testcase {
         $one = $this->gen->create_course(array('newsitems'=>101));
         $two = $this->gen->create_course(array('newsitems'=>102));
         $three = $this->gen->create_course(array('newsitems'=>103));
-        $got = Course_GO::get_one(array('newsitems__lt'=>102));
+        $got = Course::get_one(array('newsitems__lt'=>102));
         $this->assertEquals($one->id, $got->id);
         $this->assertEquals($one->newsitems, $got->newsitems);
     }
@@ -129,49 +108,49 @@ class korma_get_one_test extends advanced_testcase {
         $one = $this->gen->create_course(array('newsitems'=>101));
         $two = $this->gen->create_course(array('newsitems'=>102));
         $three = $this->gen->create_course(array('newsitems'=>103));
-        $got = Course_GO::get_one(array('newsitems__lte'=>102));
+        $got = Course::get_one(array('newsitems__lte'=>102));
         $this->assertEquals($one->id, $got->id);
         $this->assertEquals($one->newsitems, $got->newsitems);
     }
 
     public function test_get_one_condition_startswith() {
         $paul_lower = $this->gen->create_user(array('username'=>'paul.mccartney'));
-        $got = User_GO::get_one(array('username__startswith'=>'paul'));
+        $got = User::get_one(array('username__startswith'=>'paul'));
         $this->assertEquals($paul_lower->id, $got->id);
         $this->assertEquals($paul_lower->username, $got->username);
     }
 
     public function test_get_one_condition_istartswith() {
         $paul_upper = $this->gen->create_user(array('username'=>'Paul.McCartney'));
-        $got = User_GO::get_one(array('username__istartswith'=>'paul'));
+        $got = User::get_one(array('username__istartswith'=>'paul'));
         $this->assertEquals($paul_upper->id, $got->id);
         $this->assertEquals($paul_upper->username, $got->username);
     }
 
    public function test_get_one_condition_endswith() {
         $paul_lower = $this->gen->create_user(array('username'=>'paul.mccartney'));
-        $got = User_GO::get_one(array('username__endswith'=>'mccartney'));
+        $got = User::get_one(array('username__endswith'=>'mccartney'));
         $this->assertEquals($paul_lower->id, $got->id);
         $this->assertEquals($paul_lower->username, $got->username);
     }
 
     public function test_get_one_condition_iendswith() {
         $paul_upper = $this->gen->create_user(array('username'=>'Paul.McCartney'));
-        $got = User_GO::get_one(array('username__iendswith'=>'mccartney'));
+        $got = User::get_one(array('username__iendswith'=>'mccartney'));
         $this->assertEquals($paul_upper->id, $got->id);
         $this->assertEquals($paul_upper->username, $got->username);
     }
 
     public function test_get_one_condition_contains() {
         $john_lower = $this->gen->create_user(array('username'=>'john.winston.lennon'));
-        $got = User_GO::get_one(array('username__contains'=>'winston'));
+        $got = User::get_one(array('username__contains'=>'winston'));
         $this->assertEquals($john_lower->id, $got->id);
         $this->assertEquals($john_lower->username, $got->username);
     }
 
     public function test_get_one_condition_icontains() {
         $john_upper = $this->gen->create_user(array('username'=>'John.Winston.Lennon'));
-        $got = User_GO::get_one(array('username__icontains'=>'winston'));
+        $got = User::get_one(array('username__icontains'=>'winston'));
         $this->assertEquals($john_upper->id, $got->id);
         $this->assertEquals($john_upper->username, $got->username);
     }
@@ -181,7 +160,7 @@ class korma_get_one_test extends advanced_testcase {
         $mick = $this->gen->create_user(array('username'=>'mick'));
         $keith = $this->gen->create_user(array('username'=>'keith'));
         $john = $this->gen->create_user(array('username'=>'john'));
-        $got = User_GO::get_one(array('username__in'=>$beatles));
+        $got = User::get_one(array('username__in'=>$beatles));
         $this->assertEquals($john->id, $got->id);
         $this->assertEquals($john->username, $got->username);
     }
@@ -191,7 +170,7 @@ class korma_get_one_test extends advanced_testcase {
         $john_jones = $this->gen->create_user(array('firstname'=>'John', 'lastname'=>'Jones'));
         $jack_smith = $this->gen->create_user(array('firstname'=>'Jack', 'lastname'=>'Smith'));
         $john_smith = $this->gen->create_user(array('firstname'=>'John', 'lastname'=>'Smith'));
-        $got = User_GO::get_one(array('firstname__ieq'=>'john', 'lastname__startswith'=>'Smi'));
+        $got = User::get_one(array('firstname__ieq'=>'john', 'lastname__startswith'=>'Smi'));
         $this->assertEquals($john_smith->id, $got->id);
         $this->assertEquals($john_smith->username, $got->username);
     } 
@@ -201,7 +180,7 @@ class korma_get_one_test extends advanced_testcase {
         $paul = $this->gen->create_user(array('firstname'=>'Paul', 'lastname'=>'McCartney'));
         $ringo = $this->gen->create_user(array('firstname'=>'Ringo', 'lastname'=>'Starr'));
         $george = $this->gen->create_user(array('firstname'=>'George', 'lastname'=>'Harrison'));
-        $got = User_GO::get_one(
+        $got = User::get_one(
             array('firstname__eq'=>'Mick'),
             array('firstname__eq'=>'Ringo')
         );
@@ -215,7 +194,7 @@ class korma_get_one_test extends advanced_testcase {
         $paul = $this->gen->create_user(array('firstname'=>'Paul', 'lastname'=>'McCartney'));
         $ringo = $this->gen->create_user(array('firstname'=>'Ringo', 'lastname'=>'Starr'));
         $george = $this->gen->create_user(array('firstname'=>'George', 'lastname'=>'Harrison'));
-        $got = User_GO::get_one(
+        $got = User::get_one(
             array('firstname__startswith'=>'Mic', 'lastname__endswith'=>'ger'),
             array('firstname__startswith'=>'Kei', 'lastname__endswith'=>'rds'),
             array('firstname__startswith'=>'Rin', 'lastname__endswith'=>'arr')

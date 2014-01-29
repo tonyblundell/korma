@@ -2,28 +2,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once dirname(dirname(__FILE__)) . '/korma.php';
-
-
-class User_D extends Model {
-    protected static $table = 'user';
-    protected static $fields = array(
-        'id' => 'integer',
-        'username' => 'string',
-        'firstname' => 'string',
-        'lastname' => 'string'
-    );
-}
-
-
-class Course_D extends Model {
-    protected static $table = 'course';
-    protected static $fields = array(
-        'id' => 'integer',
-        'newsitems' => 'string'
-    );
-}
-
+require_once dirname(__FILE__) . '/models.php';
 
 class korma_delete_test extends advanced_testcase {
 
@@ -39,8 +18,8 @@ class korma_delete_test extends advanced_testcase {
         $paul = $this->gen->create_user(array(
             'username'=>'paul.mccartney', 'firstname'=>'Paul', 'lastname'=>'McCartney')
         );
-        User_D::delete();
-        $after = User_D::get();
+        User::delete();
+        $after = User::get();
         $this->assertEquals(0, count($after));
     }
 
@@ -53,7 +32,7 @@ class korma_delete_test extends advanced_testcase {
         $paul = $this->gen->create_user(array(
             'username'=>'paul', 'firstname'=>'Paul', 'lastname'=>'McCartney')
         );
-        $got = User_G::get();
+        $got = User::get();
         foreach(array($john, $paul) as $beatle) {
             $this->assertInternalType('integer', $got[$beatle->id]->id);
             $this->assertInternalType('string', $got[$beatle->id]->username);
@@ -66,190 +45,295 @@ class korma_delete_test extends advanced_testcase {
     public function test_delete_condition_equals() {
         $john_lower = $this->gen->create_user(array('username'=>'john'));
         $john_upper = $this->gen->create_user(array('username'=>'John'));
-        User_D::delete(array('username__eq'=>'john'));
-        $lower_from_db = User_D::get(array('username__eq'=>'john'));
-        $upper_from_db = User_D::get(array('username__eq'=>'John'));
+        User::delete(array('username__eq'=>'john'));
+        $lower_from_db = User::get(array('username__eq'=>'john'));
+        $upper_from_db = User::get(array('username__eq'=>'John'));
         $this->assertEquals(0, count($lower_from_db));
         $this->assertEquals(1, count($upper_from_db));
     }
     
-    /*
     public function test_get_condition_iequals() {
         $john_lower = $this->gen->create_user(array('username'=>'john'));
         $john_upper = $this->gen->create_user(array('username'=>'John'));
-        $users = User_G::get(array('username__ieq'=>'john'));
-        $this->assertEquals(2, count($users));
-        foreach(array($john_lower, $john_upper) as $john) {
-            $this->assertEquals($john->username, $users[$john->id]->username);
-        }
+        $paul_lower = $this->gen->create_user(array('username'=>'paul'));
+        $paul_upper = $this->gen->create_user(array('username'=>'Paul'));
+        User::delete(array('username__ieq'=>'john'));
+        $john_lower_from_db = User::get(array('username__eq'=>'john'));
+        $john_upper_from_db = User::get(array('username__eq'=>'John'));
+        $paul_lower_from_db = User::get(array('username__eq'=>'paul'));
+        $paul_upper_from_db = User::get(array('username__eq'=>'Paul'));
+        $this->assertEquals(0, count($john_lower_from_db));
+        $this->assertEquals(0, count($john_upper_from_db));
+        $this->assertEquals(1, count($paul_lower_from_db));
+        $this->assertEquals(1, count($paul_upper_from_db));
     }
 
     public function test_get_condition_greater_than() {
-        $before = Course_G::get(array('newsitems__gt'=>2));
         $one = $this->gen->create_course(array('newsitems'=>1));
         $two = $this->gen->create_course(array('newsitems'=>2));
         $three = $this->gen->create_course(array('newsitems'=>3));
         $four = $this->gen->create_course(array('newsitems'=>4));
-        $after = Course_G::get(array('newsitems__gt'=>2));
-        $this->assertEquals(count($before)+2, count($after));
-        foreach(array($three, $four) as $course) {
-            $this->assertEquals($course->newsitems, $after[$course->id]->newsitems);
+        $count_before = Course::count(array('id__gt'=>1));
+        Course::delete(array('newsitems__gt'=>2));
+        $count_after = Course::count(array('id__gt'=>1));
+        $this->assertEquals(4, $count_before);
+        $this->assertEquals(2, $count_after);
+        $courses = Course::get(array('id__gt'=>1));
+        foreach($courses as $course) {
+            $this->assertLessThan(3, $course->newsitems);
         }
     }
 
     public function test_get_condition_greater_than_or_equal_to() {
-        $before = Course_G::get(array('newsitems__gte'=>2));
         $one = $this->gen->create_course(array('newsitems'=>1));
         $two = $this->gen->create_course(array('newsitems'=>2));
         $three = $this->gen->create_course(array('newsitems'=>3));
         $four = $this->gen->create_course(array('newsitems'=>4));
-        $after = Course_G::get(array('newsitems__gte'=>2));
-        $this->assertEquals(count($before)+3, count($after));
-        foreach(array($two, $three, $four) as $course) {
-            $this->assertEquals($course->newsitems, $after[$course->id]->newsitems);
+        $count_before = Course::count(array('id__gt'=>1));
+        Course::delete(array('newsitems__gte'=>2));
+        $count_after = Course::count(array('id__gt'=>1));
+        $this->assertEquals(4, $count_before);
+        $this->assertEquals(1, $count_after);
+        $courses = Course::get(array('id__gt'=>1));
+        foreach($courses as $course) {
+            $this->assertLessThan(2, $course->newsitems);
         }
     }
 
     public function test_get_condition_less_than() {
-        $before = Course_G::get(array('newsitems__lt'=>2));
         $one = $this->gen->create_course(array('newsitems'=>1));
         $two = $this->gen->create_course(array('newsitems'=>2));
         $three = $this->gen->create_course(array('newsitems'=>3));
         $four = $this->gen->create_course(array('newsitems'=>4));
-        $after = Course_G::get(array('newsitems__lt'=>2));
-        $this->assertEquals(count($before)+1, count($after));
-        foreach(array($one) as $course) {
-            $this->assertEquals($course->newsitems, $after[$course->id]->newsitems);
+        $count_before = Course::count(array('id__gt'=>1));
+        Course::delete(array('newsitems__lt'=>2));
+        $count_after = Course::count(array('id__gt'=>1));
+        $this->assertEquals(4, $count_before);
+        $this->assertEquals(3, $count_after);
+        $courses = Course::get(array('id__gt'=>1));
+        foreach($courses as $course) {
+            $this->assertGreaterThan(1, $course->newsitems);
         }
     }
 
     public function test_get_condition_less_than_or_equal_to() {
-        $before = Course_G::get(array('newsitems__lte'=>2));
         $one = $this->gen->create_course(array('newsitems'=>1));
         $two = $this->gen->create_course(array('newsitems'=>2));
         $three = $this->gen->create_course(array('newsitems'=>3));
         $four = $this->gen->create_course(array('newsitems'=>4));
-        $after = Course_G::get(array('newsitems__lte'=>2));
-        $this->assertEquals(count($before)+2, count($after));
-        foreach(array($one, $two) as $course) {
-            $this->assertEquals($course->newsitems, $after[$course->id]->newsitems);
+        $count_before = Course::count(array('id__gt'=>1));
+        Course::delete(array('newsitems__lte'=>2));
+        $count_after = Course::count(array('id__gt'=>1));
+        $this->assertEquals(4, $count_before);
+        $this->assertEquals(2, $count_after);
+        $courses = Course::get(array('id__gt'=>1));
+        foreach($courses as $course) {
+            $this->assertGreaterThan(2, $course->newsitems);
         }
     }
 
     public function test_get_condition_startswith() {
-        $paul_lower = $this->gen->create_user(array('username'=>'paul.mccartney'));
-        $paul_upper = $this->gen->create_user(array('username'=>'Paul.McCartney'));
-        $users = User_G::get(array('username__startswith'=>'paul'));
-        $this->assertEquals(1, count($users));
-        $this->assertEquals($paul_lower->username, $users[$paul_lower->id]->username);
+        User::delete();
+        $this->assertEquals(0, User::count());
+        $john_lower = $this->gen->create_user(array('username'=>'john'));
+        $john_upper = $this->gen->create_user(array('username'=>'John'));
+        $paul_lower = $this->gen->create_user(array('username'=>'paul'));
+        $paul_upper = $this->gen->create_user(array('username'=>'Paul'));
+        $this->assertEquals(4, User::count());
+        User::delete(array('username__startswith'=>'paul'));
+        $this->assertEquals(3, User::count());
     }
-
+    
     public function test_get_condition_istartswith() {
-        $paul_lower = $this->gen->create_user(array('username'=>'paul.mccartney'));
-        $paul_upper = $this->gen->create_user(array('username'=>'Paul.McCartney'));
-        $users = User_G::get(array('username__istartswith'=>'paul'));
-        $this->assertEquals(2, count($users));
-        foreach(array($paul_lower, $paul_upper) as $paul) {
-            $this->assertEquals($paul->username, $users[$paul->id]->username);
-        }
+        User::delete();
+        $this->assertEquals(0, User::count());
+        $john_lower = $this->gen->create_user(array('username'=>'john'));
+        $john_upper = $this->gen->create_user(array('username'=>'John'));
+        $paul_lower = $this->gen->create_user(array('username'=>'paul'));
+        $paul_upper = $this->gen->create_user(array('username'=>'Paul'));
+        $this->assertEquals(4, User::count());
+        User::delete(array('username__istartswith'=>'paul'));
+        $this->assertEquals(2, User::count());
     }
 
-   public function test_get_condition_endswith() {
-        $paul_lower = $this->gen->create_user(array('username'=>'paul.mccartney'));
-        $paul_upper = $this->gen->create_user(array('username'=>'Paul.McCartney'));
-        $users = User_G::get(array('username__endswith'=>'mccartney'));
-        $this->assertEquals(1, count($users));
-        $this->assertEquals($paul_lower->username, $users[$paul_lower->id]->username);
+    public function test_get_condition_endswith() {
+        User::delete();
+        $this->assertEquals(0, User::count());
+        $john = $this->gen->create_user(array(
+            'username'=>'john',
+            'firstname' => 'John',
+            'lastname'  =>'Lennon'
+        ));
+        $paul = $this->gen->create_user(array(
+            'username'=>'paul',
+            'firstname' => 'Paul',
+            'lastname'  =>'McCartney'
+        ));
+        $ringo = $this->gen->create_user(array(
+            'username'=>'ringo',
+            'firstname' => 'Ringo',
+            'lastname'  =>'Starr'
+        ));
+        $george = $this->gen->create_user(array(
+            'username'=>'george',
+            'firstname' => 'George',
+            'lastname'  =>'Harrison'
+        ));
+        $john_upper = $this->gen->create_user(array(
+            'username'=>'johnu',
+            'firstname' => 'JOHN',
+            'lastname'  =>'LENNON'
+        ));
+        $paul_upper = $this->gen->create_user(array(
+            'username'=>'paulu',
+            'firstname' => 'PAUL',
+            'lastname'  =>'MCCARTNEY'
+        ));
+        $ringo_upper = $this->gen->create_user(array(
+            'username'=>'ringou',
+            'firstname' => 'RINGO',
+            'lastname'  =>'STARR'
+        ));
+        $george_upper = $this->gen->create_user(array(
+            'username'=>'georgeu',
+            'firstname' => 'GEORGE',
+            'lastname'  =>'HARRISON'
+        ));
+        $this->assertEquals(8, User::count());
+        User::delete(array('lastname__endswith'=>'on'));
+        $this->assertEquals(6, User::count());
     }
 
     public function test_get_condition_iendswith() {
-        $paul_lower = $this->gen->create_user(array('username'=>'paul.mccartney'));
-        $paul_upper = $this->gen->create_user(array('username'=>'Paul.McCartney'));
-        $users = User_G::get(array('username__iendswith'=>'mccartney'));
-        $this->assertEquals(2, count($users));
-        foreach(array($paul_lower, $paul_upper) as $paul) {
-            $this->assertEquals($paul->username, $users[$paul->id]->username);
-        }
+        User::delete();
+        $this->assertEquals(0, User::count());
+        $john = $this->gen->create_user(array(
+            'username'=>'john',
+            'firstname' => 'John',
+            'lastname'  =>'Lennon'
+        ));
+        $paul = $this->gen->create_user(array(
+            'username'=>'paul',
+            'firstname' => 'Paul',
+            'lastname'  =>'McCartney'
+        ));
+        $ringo = $this->gen->create_user(array(
+            'username'=>'ringo',
+            'firstname' => 'Ringo',
+            'lastname'  =>'Starr'
+        ));
+        $george = $this->gen->create_user(array(
+            'username'=>'george',
+            'firstname' => 'George',
+            'lastname'  =>'Harrison'
+        ));
+        $john_upper = $this->gen->create_user(array(
+            'username'=>'johnu',
+            'firstname' => 'JOHN',
+            'lastname'  =>'LENNON'
+        ));
+        $paul_upper = $this->gen->create_user(array(
+            'username'=>'paulu',
+            'firstname' => 'PAUL',
+            'lastname'  =>'MCCARTNEY'
+        ));
+        $ringo_upper = $this->gen->create_user(array(
+            'username'=>'ringou',
+            'firstname' => 'RINGO',
+            'lastname'  =>'STARR'
+        ));
+        $george_upper = $this->gen->create_user(array(
+            'username'=>'georgeu',
+            'firstname' => 'GEORGE',
+            'lastname'  =>'HARRISON'
+        ));
+        $this->assertEquals(8, User::count());
+        User::delete(array('lastname__iendswith'=>'on'));
+        $this->assertEquals(4, User::count());
     }
 
     public function test_get_condition_contains() {
-        $john_lower = $this->gen->create_user(array('username'=>'john.winston.lennon'));
-        $john_upper = $this->gen->create_user(array('username'=>'John.Winston.Lennon'));
-        $users = User_G::get(array('username__contains'=>'winston'));
-        $this->assertEquals(1, count($users));
-        $this->assertEquals($john_lower->username, $users[$john_lower->id]->username);
+        User::delete();
+        $this->assertEquals(0, User::count());
+        $john_lower = $this->gen->create_user(array('username'=>'john'));
+        $john_upper = $this->gen->create_user(array('username'=>'JOHN'));
+        $paul_lower = $this->gen->create_user(array('username'=>'paul'));
+        $paul_upper = $this->gen->create_user(array('username'=>'PAUL'));
+        $this->assertEquals(4, User::count());
+        User::delete(array('username__contains'=>'au'));
+        $this->assertEquals(3, User::count());
     }
 
     public function test_get_condition_icontains() {
-        $john_lower = $this->gen->create_user(array('username'=>'john.winston.lennon'));
-        $john_upper = $this->gen->create_user(array('username'=>'John.Winston.Lennon'));
-        $users = User_G::get(array('username__icontains'=>'winston'));
-        $this->assertEquals(2, count($users));
-        foreach(array($john_lower, $john_upper) as $john) {
-            $this->assertEquals($john->username, $users[$john->id]->username);
-        }
+        User::delete();
+        $this->assertEquals(0, User::count());
+        $john_lower = $this->gen->create_user(array('username'=>'john'));
+        $john_upper = $this->gen->create_user(array('username'=>'JOHN'));
+        $paul_lower = $this->gen->create_user(array('username'=>'paul'));
+        $paul_upper = $this->gen->create_user(array('username'=>'PAUL'));
+        $this->assertEquals(4, User::count());
+        User::delete(array('username__icontains'=>'au'));
+        $this->assertEquals(2, User::count());
     }
 
     public function test_get_condition_in() {
+        User::delete();
+        $this->assertEquals(0, User::count());
         $beatles = array('john', 'paul', 'ringo', 'george');
         $john = $this->gen->create_user(array('username'=>'john'));
         $paul = $this->gen->create_user(array('username'=>'paul'));
         $mick = $this->gen->create_user(array('username'=>'mick'));
-        $users = User_G::get(array('username__in'=>$beatles));
-        $this->assertEquals(2, count($users));
-        foreach(array($john, $paul) as $beatle) {
-            $this->assertEquals($beatle->username, $users[$beatle->id]->username);
-        }
+        $this->assertEquals(3, User::count());
+        User::delete(array('username__in'=>$beatles));
+        $this->assertEquals(1, User::count());
     }
 
     public function test_get_and() {
+        User::delete();
+        $this->assertEquals(0, User::count());
         $jack_jones = $this->gen->create_user(array('firstname'=>'Jack', 'lastname'=>'Jones'));
         $john_jones = $this->gen->create_user(array('firstname'=>'John', 'lastname'=>'Jones'));
         $jack_smith = $this->gen->create_user(array('firstname'=>'Jack', 'lastname'=>'Smith'));
         $john_smith = $this->gen->create_user(array('firstname'=>'John', 'lastname'=>'Smith'));
         $jack_smithe = $this->gen->create_user(array('firstname'=>'jack', 'lastname'=>'Smithe'));
         $john_smithe = $this->gen->create_user(array('firstname'=>'john', 'lastname'=>'Smithe'));
-        $users = User_G::get(array('firstname__ieq'=>'john', 'lastname__startswith'=>'Smi'));
-        $this->assertEquals(2, count($users));
-        foreach(array($john_smith, $john_smithe) as $user) {
-            $this->assertEquals($user->firstname, $users[$user->id]->firstname);
-            $this->assertEquals($user->lastname, $users[$user->id]->lastname);
-        }
+        $this->assertEquals(6, User::count());
+        User::delete(array(
+            'firstname__ieq' => 'john',
+            'lastname__startswith' => 'Smi'
+        ));
+        $this->assertEquals(4, User::count());
     } 
 
     public function test_get_or() {
+        User::delete();
+        $this->assertEquals(0, User::count());
         $john = $this->gen->create_user(array('firstname'=>'John', 'lastname'=>'Lennon'));
         $paul = $this->gen->create_user(array('firstname'=>'Paul', 'lastname'=>'McCartney'));
         $ringo = $this->gen->create_user(array('firstname'=>'Ringo', 'lastname'=>'Starr'));
         $george = $this->gen->create_user(array('firstname'=>'George', 'lastname'=>'Harrison'));
-        $users = User_G::get(
-            array('firstname__eq'=>'John'),
-            array('firstname__eq'=>'Ringo')
+        $this->assertEquals(4, User::count());
+        User::delete(
+            array('firstname__eq' => 'John'),
+            array('firstname__eq' => 'Ringo')
         );
-        $this->assertEquals(2, count($users));
-        foreach(array($john, $ringo) as $user) {
-            $this->assertEquals($user->firstname, $users[$user->id]->firstname);
-            $this->assertEquals($user->lastname, $users[$user->id]->lastname);
-        }
+        $this->assertEquals(2, User::count());
     }
     
     public function test_get_multiple_or_and() {
+        User::delete();
+        $this->assertEquals(0, User::count());
         $johnl = $this->gen->create_user(array('firstname'=>'John', 'lastname'=>'Lennon'));
         $johns = $this->gen->create_user(array('firstname'=>'John', 'lastname'=>'Smith'));
         $paul = $this->gen->create_user(array('firstname'=>'Paul', 'lastname'=>'McCartney'));
         $ringo = $this->gen->create_user(array('firstname'=>'Ringo', 'lastname'=>'Starr'));
         $george = $this->gen->create_user(array('firstname'=>'George', 'lastname'=>'Harrison'));
-        $users = User_G::get(
+        $this->assertEquals(5, User::count());
+        $users = User::delete(
             array('firstname__startswith'=>'Joh', 'lastname__endswith'=>'non'),
             array('firstname__startswith'=>'Pau', 'lastname__endswith'=>'ney'),
             array('firstname__startswith'=>'Rin', 'lastname__endswith'=>'arr')
         );
-        $this->assertEquals(3, count($users));
-        foreach(array($johnl, $paul, $ringo) as $user) {
-            $this->assertEquals($user->firstname, $users[$user->id]->firstname);
-            $this->assertEquals($user->lastname, $users[$user->id]->lastname);
-        }
+        $this->assertEquals(2, User::count());
     }
-
-    */
 }
