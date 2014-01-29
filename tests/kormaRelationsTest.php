@@ -4,14 +4,14 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once dirname(__FILE__) . '/models.php';
 
-class kormaelations_test extends advanced_testcase {
+class korma_relations_test extends advanced_testcase {
 
     protected function setUp() {
         $this->resetAfterTest();
         $this->gen = $this->getDataGenerator();
     }
 
-    public function test_many_to_oneelations() {
+    public function test_many_to_one_relations() {
         // Create users, a course and course completion
         $john = $this->gen->create_user(array('username'=>'john'));
         $paul = $this->gen->create_user(array('username'=>'paul'));
@@ -40,7 +40,7 @@ class kormaelations_test extends advanced_testcase {
         $this->assertEquals($paul_from_db, $comp_from_db->user);
     } 
 
-    public function test_one_to_manyelations() {
+    public function test_one_to_many_relations() {
         // Create users, courses and course completions
         $john = $this->gen->create_user(array('username'=>'john'));
         $paul = $this->gen->create_user(array('username'=>'paul'));
