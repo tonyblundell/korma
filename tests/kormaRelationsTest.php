@@ -40,7 +40,7 @@ class korma_relations_test extends advanced_testcase {
         $this->assertEquals($paul_from_db, $comp_from_db->user);
     } 
 
-    public function test_one_to_many_relations() {
+    public function test_get_related() {
         // Create users, courses and course completions
         $john = $this->gen->create_user(array('username'=>'john'));
         $paul = $this->gen->create_user(array('username'=>'paul'));
@@ -86,5 +86,14 @@ class korma_relations_test extends advanced_testcase {
         $this->assertEquals($help_comps, $help_from_db_rel);
         $this->assertEquals($girl_comps, $girl_from_db_rel);
     } 
+
+    public function test_set_related() {
+    }
+    
+    public function test_add_related() {
+    }
+    
+    public function test_remove_related() {
+    }
     
 }

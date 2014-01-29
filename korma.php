@@ -82,78 +82,37 @@ class Model {
     }
 
     public function set_related($relation, $items) {
-        if (!is_array($items)) {
-            $items = array($items);
+        $items = is_array($items) ? $items : array($items);
+        $table = static::$table;
+        $rel_field = static::get_related_field_name($relation);
+        $sql = "UPDATE \{$table\} SET $rel_field = NULL WHERE $rel_field = $this->id; ";
+        foreach($items as $item) {
+            $id = is_object($item) ? $item->id : $item; 
+            $sql .= "UPDATE \{$table\} SET $rel_field = $this->id WHERE id = $id; ";
         }
-        foreach ($static::$one_to_many_relations as $rel) {
-            list($rel_name, $rel_field, $rel_class) = $rel;
-            if ($rel_name == $relation) {
-                $table = static::$table;
-                $sql = "
-                    UPDATE \{$table\}
-                    SET $rel_field = NULL
-                    WHERE $rel_field = $this->id
-                ";
-                $DB->execute($sql);
-                foreach($items as $item) {
-                    $id = is_object($item) ? $item->id : $item; 
-                    $sql = "
-                        UPDATE \{$table\} 
-                        SET $rel_field = $this->id 
-                        WHERE id = $id
-                    ";
-                    $DB->execute($sql);
-                }
-                break;
-            }
-        }
-        return true;
+        $DB->execute($sql);
     }
 
     public function add_related($relation, $items) {
-        if (!is_array($items)) {
-            $items = array($items);
+        $items = is_array($items) ? $items : array($items);
+        $rel_field = static::get_related_field_name($relation);
+        $sql = '';
+        foreach($items as $item) {
+            $id = is_object($item) ? $item->id : $item; 
+            $sql .= "UPDATE \{$table\} SET $rel_field = $this->id WHERE id = $id";
         }
-        foreach ($static::$one_to_many_relations as $rel) {
-            list($rel_name, $rel_field, $rel_class) = $rel;
-            if ($rel_name == $relation) {
-                $table = static::$table;
-                foreach($items as $item) {
-                    $id = is_object($item) ? $item->id : $item; 
-                    $sql = "
-                        UPDATE \{$table\} 
-                        SET $rel_field = $this->id 
-                        WHERE id = $id
-                    ";
-                    $DB->execute($sql);
-                }
-                break;
-            }
-        }
-        return true;
+        $DB->execute($sql);
     }
 
     public function remove_related($relation, $items) {
-        if (!is_array($items)) {
-            $items = array($items);
+        $items = is_array($items) ? $items : array($items);
+        $rel_field = static::get_related_field_name($relation);
+        $sql = '';
+        foreach($items as $item) {
+            $id = is_object($item) ? $item->id : $item; 
+            $sql .= "UPDATE \{$table\} SET $rel_field = NULL WHERE id = $id";
         }
-        foreach ($static::$one_to_many_relations as $rel) {
-            list($rel_name, $rel_field, $rel_class) = $rel;
-            if ($rel_name == $relation) {
-                $table = static::$table;
-                foreach($items as $item) {
-                    $id = is_object($item) ? $item->id : $item; 
-                    $sql = "
-                        UPDATE \{$table\} 
-                        SET $rel_field = NULL
-                        WHERE id = $id
-                    ";
-                }
-                $DB->execute($sql);
-                break;
-            }
-        }
-        return true;
+        $DB->execute($sql);
     }
 
     private static function generate_sql($clauses, $order, $limit, $offset) {
@@ -240,7 +199,6 @@ class Model {
                 return "base.$field IN ('$value')";
         }
     }
-    
 
     private static function record_to_instance($record) {
         $instance = new static();
@@ -260,6 +218,15 @@ class Model {
             }
         }
         return $instance;
+    }
+
+    private static function get_related_field_name($relation) {
+        foreach (static::$one_to_many_relations as $rel) {
+            list($rel_name, $rel_field, $rel_class) = $rel;
+            if ($rel_name == $relation) {
+                return $rel_field;
+            }
+        }
     }
 
 }
