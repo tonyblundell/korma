@@ -313,10 +313,10 @@ class korma_delete_test extends advanced_testcase {
         $ringo = $this->gen->create_user(array('firstname'=>'Ringo', 'lastname'=>'Starr'));
         $george = $this->gen->create_user(array('firstname'=>'George', 'lastname'=>'Harrison'));
         $this->assertEquals(4, User::count());
-        User::delete(
+        User::delete(array(
             array('firstname__eq' => 'John'),
             array('firstname__eq' => 'Ringo')
-        );
+        ));
         $this->assertEquals(2, User::count());
     }
     
@@ -329,11 +329,11 @@ class korma_delete_test extends advanced_testcase {
         $ringo = $this->gen->create_user(array('firstname'=>'Ringo', 'lastname'=>'Starr'));
         $george = $this->gen->create_user(array('firstname'=>'George', 'lastname'=>'Harrison'));
         $this->assertEquals(5, User::count());
-        $users = User::delete(
+        $users = User::delete(array(
             array('firstname__startswith'=>'Joh', 'lastname__endswith'=>'non'),
             array('firstname__startswith'=>'Pau', 'lastname__endswith'=>'ney'),
             array('firstname__startswith'=>'Rin', 'lastname__endswith'=>'arr')
-        );
+        ));
         $this->assertEquals(2, User::count());
     }
 }

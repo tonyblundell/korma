@@ -54,7 +54,7 @@ class korma_get_one_test extends advanced_testcase {
         global $DB;
         $DB->delete_records('user');
         $got = User::get_one();
-        $this->assertTrue($got===NULL);
+        $this->assertEquals(false, $got);
     }
 
     public function test_get_one_condition_equals() {
@@ -180,10 +180,10 @@ class korma_get_one_test extends advanced_testcase {
         $paul = $this->gen->create_user(array('firstname'=>'Paul', 'lastname'=>'McCartney'));
         $ringo = $this->gen->create_user(array('firstname'=>'Ringo', 'lastname'=>'Starr'));
         $george = $this->gen->create_user(array('firstname'=>'George', 'lastname'=>'Harrison'));
-        $got = User::get_one(
+        $got = User::get_one(array(
             array('firstname__eq'=>'Mick'),
             array('firstname__eq'=>'Ringo')
-        );
+        ));
         $this->assertEquals($ringo->id, $got->id);
         $this->assertEquals($ringo->username, $got->username);
     }
@@ -194,11 +194,11 @@ class korma_get_one_test extends advanced_testcase {
         $paul = $this->gen->create_user(array('firstname'=>'Paul', 'lastname'=>'McCartney'));
         $ringo = $this->gen->create_user(array('firstname'=>'Ringo', 'lastname'=>'Starr'));
         $george = $this->gen->create_user(array('firstname'=>'George', 'lastname'=>'Harrison'));
-        $got = User::get_one(
+        $got = User::get_one(array(
             array('firstname__startswith'=>'Mic', 'lastname__endswith'=>'ger'),
             array('firstname__startswith'=>'Kei', 'lastname__endswith'=>'rds'),
             array('firstname__startswith'=>'Rin', 'lastname__endswith'=>'arr')
-        );
+        ));
         $this->assertEquals($ringo->id, $got->id);
         $this->assertEquals($ringo->username, $got->username);
    }

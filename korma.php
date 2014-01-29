@@ -4,56 +4,45 @@ defined('MOODLE_INTERNAL') || die();
 
 class Model {
 
-    // REQUIRED CLASS LEVEL CONSTANTS
-
     protected static $table;
     protected static $fields;
-
-    // OPTIONAL CLASS LEVEL CONSTANTS
     protected static $one_to_many_relations = array();
     protected static $many_to_one_relations = array();
 
-    // CLASS LEVEL INTERFACE
- 
-    public static function count() {
+    public static function get($clauses=array(), $order='id', $limit=0, $offset=0) {
         global $DB;
-        $clause_lists = func_get_args();
-        $clauses_sql = static::generate_clauses_sql($clause_lists);
-        $sql = "SELECT COUNT(*) FROM {" . static::$table ."} AS base $clauses_sql";
+        $sql = static::generate_sql($clauses, $order, $limit, $offset);
+        $records = $DB->get_records_sql($sql);
+        $instances = array_map(array('static', 'record_to_instance'), $records);
+        return $instances;
+    }
+
+    public static function get_one($clauses=array()) {
+        $instances = static::get($clauses, 'id', 0);
+        return reset($instances);
+    }
+
+    public static function count($clauses=array()) {
+        global $DB;
+        $sql_where = static::generate_sql_where_clause($clauses);
+        $sql = "SELECT COUNT(*) FROM {" . static::$table ."} AS base ";
+        if ($sql_where) {
+            $sql .= "WHERE $sql_where";
+        }
         return $DB->count_records_sql($sql);
     }
 
-    public static function get() {
-        $clause_lists = func_get_args();
-        return static::get_instances($clause_lists);
-    }
-
-    public static function get_one() { 
-        $clause_lists = func_get_args();
-        $instances = static::get_instances($clause_lists);
-        $instance = reset($instances);
-        if ($instance) {
-            return $instance;
-        } 
-        return NULL;
-    }
-
-    public static function delete() {
+    public static function delete($clauses=array()) {
         global $DB;
-        $clause_lists = func_get_args();
-        $clauses_sql = static::generate_clauses_sql($clause_lists);
+        $clauses_sql = static::generate_sql_where_clause($clauses);
         $clauses_sql = preg_replace('/^WHERE/', '', $clauses_sql);
         $clauses_sql = preg_replace('/base\./', '', $clauses_sql);
         return $DB->delete_records_select(static::$table, $clauses_sql);
     }
 
-    // INSTANCE LEVEL INTERFACE
-
-    public function __construct($attrs=NULL) {
-        if ($attrs) {
-            foreach($attrs as $attr => $value) {
-                $this->$attr = $value;
-            }
+    public function __construct($attrs=array()) {
+        foreach($attrs as $attr => $value) {
+            $this->$attr = $value;
         }
     }
  
@@ -92,25 +81,64 @@ class Model {
         }
     }
 
-    // PRIVATE FUNCTIONS
-
-    private static function generate_clauses_sql($clause_lists) {
-        $clauses = array();
-        foreach($clause_lists as $clause_list) {
-            $clauses [] = static::parse_clause_list($clause_list);
+    private static function generate_sql($clauses, $order, $limit, $offset) {
+        $select_sql = "SELECT ";
+        $from_sql = " FROM {" . static::$table . "} AS base ";
+        $where_sql = static::generate_sql_where_clause($clauses);
+        if ($where_sql) {
+            $where_sql = "WHERE $where_sql";
         }
-        if ($clauses) {
-            return 'WHERE'.implode(' OR ', $clauses);
+        foreach (static::$fields as $field => $type) {
+            $select_sql .= "base.$field AS base__$field, "; 
         }
-        return '';
+        foreach (static::$many_to_one_relations as $relation) {
+            list($rel_name, $rel_field, $rel_class) = $relation;
+            $rel_table = $rel_class::$table;
+            $from_sql .= "JOIN {{$rel_table}} AS korma__$rel_name ";
+            $from_sql .= "ON (korma__{$rel_name}.id = base.$rel_field) ";
+            foreach ($rel_class::$fields as $field => $type) {
+                $select_sql .= "korma__{$rel_name}.$field AS {$rel_name}__$field, ";
+            }
+        }
+        $select_sql = rtrim($select_sql, ", ");
+        $sql = "$select_sql $from_sql $where_sql";
+        if ($order) {
+            if (strpos($order, '-') === 0) {
+                $order = substr($order, 1);
+                $sql .= " ORDER BY base.$order DESC ";
+            } else {
+                $sql .= " ORDER BY base.$order ASC ";
+            }
+        }
+        if ($limit) {
+            $sql .= " LIMIT $limit ";
+        }
+        if ($offset) {
+            $sql .= " OFFSET $offset ";
+        }
+        return $sql;
     }
 
-    private static function parse_clause_list($clause_list) {
-        $clauses = array();
-        foreach($clause_list as $field=>$value) {
-            $clauses[] = static::parse_clause($field, $value);
+    private static function generate_sql_where_clause($clauses) {
+        if (array_keys($clauses) !== range(0, count($clauses) - 1)) {
+            $clauses = array($clauses);
         }
-        return '('.implode(' AND ', $clauses).')';
+        $sql = '';
+        foreach ($clauses as $list) {
+            $sql .= '(';
+            foreach($list as $field => $value) {
+                $sql .= '(';
+                $sql .= static::parse_clause($field, $value);
+                $sql .= ') AND ';
+            }
+            $sql = rtrim($sql, 'AND ');
+            $sql .= ') OR ';
+        } 
+        $sql = rtrim($sql, 'OR ');
+        if ($sql == '()') { 
+            $sql = '';
+        }
+        return $sql;
     }
 
     private static function parse_clause($field, $value) {
@@ -138,37 +166,6 @@ class Model {
         }
     }
     
-    private static function get_instances($clause_lists, $limit=0) {
-        global $DB;
-        $sql = static::generate_sql($clause_lists, $limit);
-        $records = $DB->get_records_sql($sql);
-        $instances = array_map(array('static', 'record_to_instance'), $records);
-        return $instances;
-    }
-
-    private static function generate_sql($clause_lists, $limit=0) {
-        $select_sql = "SELECT ";
-        $from_sql = " FROM {" . static::$table . "} AS base ";
-        $where_sql = static::generate_clauses_sql($clause_lists);
-        foreach (static::$fields as $field => $type) {
-            $select_sql .= "base.$field AS base__$field, "; 
-        }
-        foreach (static::$many_to_one_relations as $relation) {
-            list($rel_name, $rel_field, $rel_class) = $relation;
-            $rel_table = $rel_class::$table;
-            $from_sql .= "JOIN {{$rel_table}} AS korma__$rel_name ";
-            $from_sql .= "ON (korma__{$rel_name}.id = base.$rel_field) ";
-            foreach ($rel_class::$fields as $field => $type) {
-                $select_sql .= "korma__{$rel_name}.$field AS {$rel_name}__$field, ";
-            }
-        }
-        $select_sql = rtrim($select_sql, ", ");
-        $sql = "$select_sql $from_sql $where_sql";
-        if ($limit) {
-            $sql .= " LIMIT $limit";
-        }
-        return $sql;
-    }
 
     private static function record_to_instance($record) {
         $instance = new static();

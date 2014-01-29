@@ -140,10 +140,10 @@ class korma_count_test extends advanced_testcase {
         $this->gen->create_user(array('firstname'=>'Paul', 'lastname'=>'McCartney'));
         $this->gen->create_user(array('firstname'=>'Ringo', 'lastname'=>'Starr'));
         $this->gen->create_user(array('firstname'=>'George', 'lastname'=>'Harrison'));
-        $num_users = User::count(
+        $num_users = User::count(array(
             array('firstname__eq'=>'John'),
             array('firstname__eq'=>'Ringo')
-        );
+        ));
         $this->assertEquals(2, $num_users);
     }
     
@@ -153,11 +153,11 @@ class korma_count_test extends advanced_testcase {
         $this->gen->create_user(array('firstname'=>'Paul', 'lastname'=>'McCartney'));
         $this->gen->create_user(array('firstname'=>'Ringo', 'lastname'=>'Starr'));
         $this->gen->create_user(array('firstname'=>'George', 'lastname'=>'Harrison'));
-        $num_users = User::count(
+        $num_users = User::count(array(
             array('firstname__startswith'=>'Joh', 'lastname__endswith'=>'non'),
             array('firstname__startswith'=>'Pau', 'lastname__endswith'=>'ney'),
             array('firstname__startswith'=>'Rin', 'lastname__endswith'=>'arr')
-        );
+        ));
         $this->assertEquals(3, $num_users);
     }
     

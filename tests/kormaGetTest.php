@@ -32,6 +32,61 @@ class korma_get_test extends advanced_testcase {
         }
     }
 
+    public function test_get_order() {
+        global $DB;
+        $DB->delete_records('user');
+        $this->gen->create_user(array('firstname'=>'John', 'lastname'=>'Lennon'));
+        $this->gen->create_user(array('firstname'=>'Paul', 'lastname'=>'McCartney'));
+        $this->gen->create_user(array('firstname'=>'Ringo', 'lastname'=>'Starr'));
+        $this->gen->create_user(array('firstname'=>'George', 'lastname'=>'Harrison'));
+        $john = User::get_one(array('firstname__eq'=>'John'));
+        $paul = User::get_one(array('firstname__eq'=>'Paul'));
+        $ringo = User::get_one(array('firstname__eq'=>'Ringo'));
+        $george = User::get_one(array('firstname__eq'=>'George'));
+        $this->assertEquals(array(
+                $george->id => $george, 
+                $john->id => $john, 
+                $paul->id => $paul, 
+                $ringo->id => $ringo
+        ), User::get(array(), 'firstname'));
+        $this->assertEquals(array(
+                $ringo->id => $ringo,
+                $paul->id => $paul, 
+                $john->id => $john, 
+                $george->id => $george
+        ), User::get(array(), '-firstname'));
+    } 
+
+    public function test_get_limit_and_offset() {
+        global $DB;
+        $this->gen->create_user(array('username'=>'0'));
+        $this->gen->create_user(array('username'=>'1'));
+        $this->gen->create_user(array('username'=>'2'));
+        $this->gen->create_user(array('username'=>'3'));
+        $this->gen->create_user(array('username'=>'4'));
+        $this->gen->create_user(array('username'=>'5'));
+        $this->gen->create_user(array('username'=>'6'));
+        $this->gen->create_user(array('username'=>'7'));
+        $this->gen->create_user(array('username'=>'8'));
+        $this->gen->create_user(array('username'=>'9'));
+        $_0 = User::get_one(array('username__eq'=>'0'));
+        $_1 = User::get_one(array('username__eq'=>'1'));
+        $_2 = User::get_one(array('username__eq'=>'2'));
+        $_3 = User::get_one(array('username__eq'=>'3'));
+        $_4 = User::get_one(array('username__eq'=>'4'));
+        $_5 = User::get_one(array('username__eq'=>'5'));
+        $_6 = User::get_one(array('username__eq'=>'6'));
+        $_7 = User::get_one(array('username__eq'=>'7'));
+        $_8 = User::get_one(array('username__eq'=>'8'));
+        $_9 = User::get_one(array('username__eq'=>'9'));
+        $users = User::get(array(), 'username', 3, 2);
+        $this->assertEquals(array(
+            $_2->id => $_2,
+            $_3->id => $_3,
+            $_4->id => $_4
+        ), User::get(array(), 'username', 3, 2));
+    }
+
     public function test_get_field_types() {
         global $DB;
         $john = $this->gen->create_user(array(
@@ -205,10 +260,10 @@ class korma_get_test extends advanced_testcase {
         $paul = $this->gen->create_user(array('firstname'=>'Paul', 'lastname'=>'McCartney'));
         $ringo = $this->gen->create_user(array('firstname'=>'Ringo', 'lastname'=>'Starr'));
         $george = $this->gen->create_user(array('firstname'=>'George', 'lastname'=>'Harrison'));
-        $users = User::get(
+        $users = User::get(array(
             array('firstname__eq'=>'John'),
             array('firstname__eq'=>'Ringo')
-        );
+        ));
         $this->assertEquals(2, count($users));
         foreach(array($john, $ringo) as $user) {
             $this->assertEquals($user->firstname, $users[$user->id]->firstname);
@@ -222,11 +277,11 @@ class korma_get_test extends advanced_testcase {
         $paul = $this->gen->create_user(array('firstname'=>'Paul', 'lastname'=>'McCartney'));
         $ringo = $this->gen->create_user(array('firstname'=>'Ringo', 'lastname'=>'Starr'));
         $george = $this->gen->create_user(array('firstname'=>'George', 'lastname'=>'Harrison'));
-        $users = User::get(
+        $users = User::get(array(
             array('firstname__startswith'=>'Joh', 'lastname__endswith'=>'non'),
             array('firstname__startswith'=>'Pau', 'lastname__endswith'=>'ney'),
             array('firstname__startswith'=>'Rin', 'lastname__endswith'=>'arr')
-        );
+        ));
         $this->assertEquals(3, count($users));
         foreach(array($johnl, $paul, $ringo) as $user) {
             $this->assertEquals($user->firstname, $users[$user->id]->firstname);

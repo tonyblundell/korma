@@ -17,8 +17,7 @@ class korma_save_test extends advanced_testcase {
         $ringo = new User(array(
             'username'=>'ringo', 'firstname'=>'Richard', 'lastname'=>'Starkey'
         ));
-        $got = User::get_one();
-        $this->assertEquals(false, $got);
+        $this->assertEquals(0, User::count());
         $ringo->save();
         $got = User::get_one();
         $this->assertEquals($ringo->id, $got->id);
