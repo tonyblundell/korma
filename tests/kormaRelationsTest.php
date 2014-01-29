@@ -64,10 +64,10 @@ class korma_relations_test extends advanced_testcase {
         $paul_from_db = User::get_one(array('id__eq'=>$paul->id));
         $help_from_db = Course::get_one(array('id__eq'=>$help->id));
         $girl_from_db = Course::get_one(array('id__eq'=>$girl->id));
-        $john_from_dbel = $john_from_db->get_related('course_completions');
-        $paul_from_dbel = $paul_from_db->get_related('course_completions');
-        $help_from_dbel = $help_from_db->get_related('course_completions');
-        $girl_from_dbel = $girl_from_db->get_related('course_completions');
+        $john_from_db_rel = $john_from_db->get_related('course_completions');
+        $paul_from_db_rel = $paul_from_db->get_related('course_completions');
+        $help_from_db_rel = $help_from_db->get_related('course_completions');
+        $girl_from_db_rel = $girl_from_db->get_related('course_completions');
         // Assert that the relation attributes are set to the correct objects
         $john_comps = CourseCompletion::get(
             array('userid__eq'=>$john->id)
@@ -81,10 +81,10 @@ class korma_relations_test extends advanced_testcase {
         $girl_comps = CourseCompletion::get(
             array('course__eq'=>$girl->id)
         );
-        $this->assertEquals($john_comps, $john_from_dbel);
-        $this->assertEquals($paul_comps, $paul_from_dbel);
-        $this->assertEquals($help_comps, $help_from_dbel);
-        $this->assertEquals($girl_comps, $girl_from_dbel);
+        $this->assertEquals($john_comps, $john_from_db_rel);
+        $this->assertEquals($paul_comps, $paul_from_db_rel);
+        $this->assertEquals($help_comps, $help_from_db_rel);
+        $this->assertEquals($girl_comps, $girl_from_db_rel);
     } 
     
 }
