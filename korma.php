@@ -67,7 +67,14 @@ class Model {
         } else {
             $this->id = $DB->insert_record(static::$table, $record);
         }
-        return $this->id;
+    }
+
+    public function refresh() {
+        $got = static::get_one(array('id__eq'=>$this->id));
+        foreach (get_object_vars($got) as $key => $value) {
+            $this->$key = $value;
+        }
+        return $this;
     }
 
     public function get_related($relation) {
@@ -82,37 +89,46 @@ class Model {
     }
 
     public function set_related($relation, $items) {
-        $items = is_array($items) ? $items : array($items);
-        $table = static::$table;
-        $rel_field = static::get_related_field_name($relation);
-        $sql = "UPDATE \{$table\} SET $rel_field = NULL WHERE $rel_field = $this->id; ";
-        foreach($items as $item) {
-            $id = is_object($item) ? $item->id : $item; 
-            $sql .= "UPDATE \{$table\} SET $rel_field = $this->id WHERE id = $id; ";
+        global $DB;
+        list($rel_name, $rel_field, $rel_class) = static::get_related_field_info($relation);
+        $DB->execute("UPDATE {".$rel_class::$table."} SET $rel_field = NULL WHERE $rel_field = $this->id");
+        $ids = array();
+        foreach(is_array($items) ? $items : array($items) as $item) {
+            $ids[] = is_object($item) ? $item->id : $item; 
         }
-        $DB->execute($sql);
+        $DB->execute("
+            UPDATE {".$rel_class::$table."} 
+            SET $rel_field = $this->id 
+            WHERE id IN (".implode(', ', $ids).")
+        ");
     }
 
     public function add_related($relation, $items) {
-        $items = is_array($items) ? $items : array($items);
-        $rel_field = static::get_related_field_name($relation);
-        $sql = '';
-        foreach($items as $item) {
-            $id = is_object($item) ? $item->id : $item; 
-            $sql .= "UPDATE \{$table\} SET $rel_field = $this->id WHERE id = $id";
+        global $DB;
+        list($rel_name, $rel_field, $rel_class) = static::get_related_field_info($relation);
+        $ids = array();
+        foreach(is_array($items) ? $items : array($items) as $item) {
+            $ids[] = is_object($item) ? $item->id : $item; 
         }
-        $DB->execute($sql);
+        $DB->execute("
+            UPDATE {{$table}} 
+            SET $rel_field = $this->id 
+            WHERE id IN (".implode(', ', $ids).")
+        ");
     }
 
     public function remove_related($relation, $items) {
-        $items = is_array($items) ? $items : array($items);
-        $rel_field = static::get_related_field_name($relation);
-        $sql = '';
-        foreach($items as $item) {
-            $id = is_object($item) ? $item->id : $item; 
-            $sql .= "UPDATE \{$table\} SET $rel_field = NULL WHERE id = $id";
+        global $DB;
+        list($rel_name, $rel_field, $rel_class) = static::get_related_field_info($relation);
+        $ids = array();
+        foreach(is_array($items) ? $items : array($items) as $item) {
+            $ids[] = is_object($item) ? $item->id : $item; 
         }
-        $DB->execute($sql);
+        $DB->execute("
+            UPDATE {{$table}} 
+            SET $rel_field = NULL 
+            WHERE id IN (".implode(', ', $ids).")
+        ");
     }
 
     private static function generate_sql($clauses, $order, $limit, $offset) {
@@ -220,11 +236,11 @@ class Model {
         return $instance;
     }
 
-    private static function get_related_field_name($relation) {
+    private static function get_related_field_info($relation) {
         foreach (static::$one_to_many_relations as $rel) {
             list($rel_name, $rel_field, $rel_class) = $rel;
             if ($rel_name == $relation) {
-                return $rel_field;
+                return $rel;
             }
         }
     }
