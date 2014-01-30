@@ -67,6 +67,7 @@ class Model {
         } else {
             $this->id = $DB->insert_record(static::$table, $record);
         }
+        return $this->refresh();
     }
 
     public function refresh() {
