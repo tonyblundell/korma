@@ -131,9 +131,51 @@ class korma_relations_test extends advanced_testcase {
         ), $john->get_related('course_completions'));
     }
 
-    public function test_add_related() {
+    public function test_add_related_id() {
+        $john = new User(array('username'=>'john'));
+        $john->save();
+        $paul = new User(array('username'=>'paul'));
+        $paul->save();
+        $help = new Course(array('shortname'=>'Help'));
+        $help->save();
+        $yesterday = new Course(array('shortname'=>'Yesterday'));
+        $yesterday->save();
+        $comp_help = new CourseCompletion(array('user'=>$john, 'course'=>$help));
+        $comp_help->save();
+        $comp_yesterday = new CourseCompletion(array('user'=>$paul, 'course'=>$yesterday));
+        $comp_yesterday->save();
+        $this->assertEquals(array(
+            $comp_help->id => $comp_help
+        ), $john->get_related('course_completions'));
+        $john->add_related($comp_yesterday->id);
+        $this->assertEquals(array(
+            $comp_help->id => $comp_help,
+            $comp_yesterday->id => $comp_yesterday
+        ), $john->get_related('course_completions'));
     }
     
+    public function test_add_related_object() {
+        $john = new User(array('username'=>'john'));
+        $john->save();
+        $paul = new User(array('username'=>'paul'));
+        $paul->save();
+        $help = new Course(array('shortname'=>'Help'));
+        $help->save();
+        $yesterday = new Course(array('shortname'=>'Yesterday'));
+        $yesterday->save();
+        $comp_help = new CourseCompletion(array('user'=>$john, 'course'=>$help));
+        $comp_help->save();
+        $comp_yesterday = new CourseCompletion(array('user'=>$paul, 'course'=>$yesterday));
+        $comp_yesterday->save();
+        $this->assertEquals(array(
+            $comp_help->id => $comp_help
+        ), $john->get_related('course_completions'));
+        $john->add_related($comp_yesterday);
+        $this->assertEquals(array(
+            $comp_help->id => $comp_help,
+            $comp_yesterday->id => $comp_yesterday
+        ), $john->get_related('course_completions'));
+    }
     public function test_remove_related() {
     }
     
