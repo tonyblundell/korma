@@ -92,7 +92,7 @@ class Model {
     public function set_related($relation, $items) {
         global $DB;
         list($rel_name, $rel_field, $rel_class) = static::get_related_field_info($relation);
-        $DB->execute("UPDATE {".$rel_class::$table."} SET $rel_field = NULL WHERE $rel_field = $this->id");
+        $DB->execute("UPDATE {".$rel_class::$table."} SET $rel_field = 0 WHERE $rel_field = $this->id");
         $ids = array();
         foreach(is_array($items) ? $items : array($items) as $item) {
             $ids[] = is_object($item) ? $item->id : $item; 
@@ -112,7 +112,7 @@ class Model {
             $ids[] = is_object($item) ? $item->id : $item; 
         }
         $DB->execute("
-            UPDATE {{$table}} 
+            UPDATE {".$rel_class::$table."} 
             SET $rel_field = $this->id 
             WHERE id IN (".implode(', ', $ids).")
         ");
@@ -126,8 +126,8 @@ class Model {
             $ids[] = is_object($item) ? $item->id : $item; 
         }
         $DB->execute("
-            UPDATE {{$table}} 
-            SET $rel_field = NULL 
+            UPDATE {".$rel_class::$table."} 
+            SET $rel_field = 0 
             WHERE id IN (".implode(', ', $ids).")
         ");
     }
