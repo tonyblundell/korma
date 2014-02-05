@@ -11,7 +11,10 @@ class User extends Model {
         'lastname' => 'string'
     );
     protected static $one_to_many_relations = array(
-        array('course_completions', 'userid', 'CourseCompletion')
+        'course_completions' => array(
+            'model' => 'CourseCompletion',
+            'field' => 'userid'
+        )
     );
 }
 
@@ -23,7 +26,10 @@ class Course extends Model {
         'newsitems' => 'integer'
     );
     protected static $one_to_many_relations = array(
-        array('course_completions', 'course', 'CourseCompletion')
+        'course_completions' => array(
+            'model' => 'CourseCompletion',
+            'field' => 'course'
+        )
     );
 }
 
@@ -33,7 +39,13 @@ class CourseCompletion extends Model {
         'id' => 'integer'
     );
     protected static $many_to_one_relations = array(
-        array('user', 'userid', 'User'),
-        array('course', 'course', 'Course')
+        'user' => array(
+            'model' => 'User',
+            'field' => 'userid'
+        ),
+        'course' => array(
+            'model' => 'Course',
+            'field' => 'course'
+        )
     );
 }

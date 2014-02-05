@@ -55,10 +55,9 @@ class Model {
             }
         }
         if (isset(static::$many_to_one_relations)) {
-            foreach(static::$many_to_one_relations as $relation) {
-                list($rel_name, $rel_field, $rel_class) = $relation;
+            foreach(static::$many_to_one_relations as $rel_name => $rel) {
                 if (isset($this->{$rel_name})) {
-                    $record->{$rel_field} = $this->{$rel_name}->id;
+                    $record->{$rel['field']} = $this->{$rel_name}->id;
                 }
             }
         }
@@ -79,55 +78,51 @@ class Model {
     }
 
     public function get_related($relation) {
-        foreach(static::$one_to_many_relations as $rel) {
-            list($rel_name, $rel_field, $rel_class) = $rel;
-            if ($rel_name === $relation) {
-                return $rel_class::get(
-                    array($rel_field.'__eq'=>$this->id)
-                );
-            }
-        }
+        $rel = static::$one_to_many_relations[$relation];
+        return $rel['model']::get(
+            array($rel['field'].'__eq'=>$this->id)
+        );
     }
 
     public function set_related($relation, $items) {
         global $DB;
-        list($rel_name, $rel_field, $rel_class) = static::get_related_field_info($relation);
-        $DB->execute("UPDATE {".$rel_class::$table."} SET $rel_field = 0 WHERE $rel_field = $this->id");
+        $rel = static::$one_to_many_relations[$relation]; 
+        $DB->execute("UPDATE {".$rel['model']::$table."} SET {$rel['field']} = 0 WHERE {$rel['field']} = $this->id");
         $ids = array();
         foreach(is_array($items) ? $items : array($items) as $item) {
             $ids[] = is_object($item) ? $item->id : $item; 
         }
         $DB->execute("
-            UPDATE {".$rel_class::$table."} 
-            SET $rel_field = $this->id 
+            UPDATE {".$rel['model']::$table."} 
+            SET {$rel['field']} = $this->id 
             WHERE id IN (".implode(', ', $ids).")
         ");
     }
 
     public function add_related($relation, $items) {
         global $DB;
-        list($rel_name, $rel_field, $rel_class) = static::get_related_field_info($relation);
+        $rel = static::$one_to_many_relations[$relation]; 
         $ids = array();
         foreach(is_array($items) ? $items : array($items) as $item) {
             $ids[] = is_object($item) ? $item->id : $item; 
         }
         $DB->execute("
-            UPDATE {".$rel_class::$table."} 
-            SET $rel_field = $this->id 
+            UPDATE {".$rel['model']::$table."} 
+            SET {$rel['field']} = $this->id 
             WHERE id IN (".implode(', ', $ids).")
         ");
     }
 
     public function remove_related($relation, $items) {
         global $DB;
-        list($rel_name, $rel_field, $rel_class) = static::get_related_field_info($relation);
+        $rel = static::$one_to_many_relations[$relation]; 
         $ids = array();
         foreach(is_array($items) ? $items : array($items) as $item) {
             $ids[] = is_object($item) ? $item->id : $item; 
         }
         $DB->execute("
-            UPDATE {".$rel_class::$table."} 
-            SET $rel_field = 0 
+            UPDATE {".$rel['model']::$table."} 
+            SET {$rel['field']} = 0 
             WHERE id IN (".implode(', ', $ids).")
         ");
     }
@@ -142,12 +137,11 @@ class Model {
         foreach (static::$fields as $field => $type) {
             $select_sql .= "base.$field AS base__$field, "; 
         }
-        foreach (static::$many_to_one_relations as $relation) {
-            list($rel_name, $rel_field, $rel_class) = $relation;
-            $rel_table = $rel_class::$table;
+        foreach (static::$many_to_one_relations as $rel_name => $rel) {
+            $rel_table = $rel['model']::$table;
             $from_sql .= "JOIN {{$rel_table}} AS korma__$rel_name ";
-            $from_sql .= "ON (korma__{$rel_name}.id = base.$rel_field) ";
-            foreach ($rel_class::$fields as $field => $type) {
+            $from_sql .= "ON (korma__{$rel_name}.id = base.{$rel['field']}) ";
+            foreach ($rel['model']::$fields as $field => $type) {
                 $select_sql .= "korma__{$rel_name}.$field AS {$rel_name}__$field, ";
             }
         }
@@ -195,9 +189,9 @@ class Model {
     private static function parse_clause($field, $value) {
         $table = static::$table;
         $exploded = explode('__', $field);
-        $exploded_count = count($exploded);
-        $clause = $exploded[$exploded_count-1];
-        $field = $exploded[$exploded_count-2];
+        $count = count($exploded);
+        $field = $exploded[0];
+        $clause  = $count > 1 ? $exploded[$count-1] : 'eq';
         switch ($clause) {
             case 'eq': return "base.$field = '$value'";
             case 'ieq': return "base.$field ILIKE '$value'";
@@ -224,10 +218,9 @@ class Model {
             settype($instance->{$field_name}, $field_type);
         }
         if (isset(static::$many_to_one_relations)) {
-            foreach(static::$many_to_one_relations as $relation) {
-                list($rel_name, $rel_field, $rel_class) = $relation;
-                $rel_instance = new $rel_class();
-                foreach($rel_class::$fields as $field_name => $field_type) {
+            foreach(static::$many_to_one_relations as $rel_name => $rel) {
+                $rel_instance = new $rel['model']();
+                foreach($rel['model']::$fields as $field_name => $field_type) {
                     $rel_instance->{$field_name} = $record->{"{$rel_name}__$field_name"};
                     settype($rel_instance->{$field_name}, $field_type);
                 }
@@ -238,12 +231,7 @@ class Model {
     }
 
     private static function get_related_field_info($relation) {
-        foreach (static::$one_to_many_relations as $rel) {
-            list($rel_name, $rel_field, $rel_class) = $rel;
-            if ($rel_name == $relation) {
-                return $rel;
-            }
-        }
+        return static::$one_to_many_relations[$relation];
     }
 
 }

@@ -107,7 +107,10 @@ class korma_get_test extends advanced_testcase {
     public function test_get_condition_equals() {
         $john_lower = $this->gen->create_user(array('username'=>'john'));
         $john_upper = $this->gen->create_user(array('username'=>'John'));
-        $users = User::get(array('username__eq'=>'john'));
+        $users = User::get(array('username'=>'john'));
+        $this->assertEquals(1, count($users));
+        $this->assertEquals($john_lower->username, $users[$john_lower->id]->username);
+        $users = User::get(array('username_eq'=>'john'));
         $this->assertEquals(1, count($users));
         $this->assertEquals($john_lower->username, $users[$john_lower->id]->username);
     }

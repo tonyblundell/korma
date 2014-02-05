@@ -59,6 +59,10 @@ class korma_get_one_test extends advanced_testcase {
 
     public function test_get_one_condition_equals() {
         $john_lower = $this->gen->create_user(array('username'=>'john'));
+        $got = User::get_one(array('username'=>'john'));
+        $this->assertEquals($john_lower->id, $got->id);
+        $this->assertEquals($john_lower->firstname, $got->firstname);
+        $this->assertEquals($john_lower->lastname, $got->lastname);
         $got = User::get_one(array('username__eq'=>'john'));
         $this->assertEquals($john_lower->id, $got->id);
         $this->assertEquals($john_lower->firstname, $got->firstname);
