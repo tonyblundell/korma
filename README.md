@@ -1,4 +1,4 @@
-# Korma - Expermental ORM layer for Moodle
+# Korma - Experimental ORM layer for Moodle
 
 ## How To Use
 
@@ -50,13 +50,13 @@ Returns an array of all books in the DB.
 
         Book::get_one();
     
-Returns the first book in the database
+Returns the first book in the database. If a filter was specified, would return
+the first matching result. If there are no matches in the database, returns 
+boolean false.
       
         Book::count();
 
-Returns a count of all books in the DB.
-
-These methods can also be used with filters.
+Returns a count of all books in the DB. Can also be used with filters.
 
 ## Filters
 
@@ -94,7 +94,7 @@ Other filters are available:
             'title__contains' => 'PHP'
         ));
 
-Returns all PHP books published since 2010.
+Returns all books that have PHP in the title *AND* were published since 2010.
 
 ## OR-ing Filters
 
@@ -104,7 +104,7 @@ Returns all PHP books published since 2010.
             'title__contains' => 'jQuery'
         ));
 
-Returns all books about Javascript OR jQuery.
+Returns all that have Javascript *OR* jQuery in the title.
 
 ## Creating And Saving Instances
 
@@ -151,16 +151,23 @@ Deletes all books released prior to 1984.
 Returns a list of Emily's books.
 
         $emily->add_related('books', array($heights));
+
+Sets $heights authorid to $emily->id.
+
         $emily->remove_related('books', array($heights));
+
+Removes Emily's books by NULLing the book->authorid field. 
+Note: some 'FK' fields in Moodle aren't NULLable (course_completions.course, 
+for example). In these cases, using model::delete may be more suitable.
+
         $emily->set_related('books', array($heights));
 
-Updates the related objects accordingly. Elements in the array can be either
-instances or IDs.
+Removes Emily's existing books then adds the ones specified.
+
+All of these functions will accept an array of instances or IDs. 
 
 ## Refresh An Instance From The Database
 
         $emily->refresh();
 
 Pulls all fields directly from the database and updates the instance.
-
-    
