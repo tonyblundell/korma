@@ -7,8 +7,18 @@ require_once dirname(__FILE__) . '/models.php';
 class korma_relations_test extends advanced_testcase {
 
     protected function setUp() {
+        // We temporarily make course_completions.userid NULLABLE for this test,
+        // so we can test the removing of related objects.
+        global $DB;
+        $DB->execute('ALTER TABLE {course_completions} ALTER COLUMN userid DROP NOT NULL');
         $this->resetAfterTest();
         $this->gen = $this->getDataGenerator();
+    }
+
+    protected function tearDown() {
+        global $DB;
+        $DB->delete_records_select('course_completions', 'userid IS NULL');
+        $DB->execute('ALTER TABLE {course_completions} ALTER COLUMN userid SET NOT NULL');
     }
 
     public function test_many_to_one_relations() {

@@ -87,7 +87,11 @@ class Model {
     public function set_related($relation, $items) {
         global $DB;
         $rel = static::$one_to_many_relations[$relation]; 
-        $DB->execute("UPDATE {".$rel['model']::$table."} SET {$rel['field']} = 0 WHERE {$rel['field']} = $this->id");
+        $DB->execute("
+            UPDATE {".$rel['model']::$table."} 
+            SET {$rel['field']} = NULL 
+            WHERE {$rel['field']} = $this->id
+        ");
         $ids = array();
         foreach(is_array($items) ? $items : array($items) as $item) {
             $ids[] = is_object($item) ? $item->id : $item; 
@@ -122,7 +126,7 @@ class Model {
         }
         $DB->execute("
             UPDATE {".$rel['model']::$table."} 
-            SET {$rel['field']} = 0 
+            SET {$rel['field']} = NULL 
             WHERE id IN (".implode(', ', $ids).")
         ");
     }
