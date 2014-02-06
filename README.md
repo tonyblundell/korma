@@ -116,9 +116,11 @@ Returns all books that have PHP in the title *AND* were published since 2010.
 
 ```php
 Book::get(array(
-    'title__contains' => 'Javascript'
-), array(
-    'title__contains' => 'jQuery'
+    array(
+        'title__contains' => 'Javascript'
+    ), array(
+        'title__contains' => 'jQuery'
+    )
 ));
 ```
 
