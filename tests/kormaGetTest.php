@@ -110,7 +110,7 @@ class korma_get_test extends advanced_testcase {
         $users = User::get(array('username'=>'john'));
         $this->assertEquals(1, count($users));
         $this->assertEquals($john_lower->username, $users[$john_lower->id]->username);
-        $users = User::get(array('username_eq'=>'john'));
+        $users = User::get(array('username__eq'=>'john'));
         $this->assertEquals(1, count($users));
         $this->assertEquals($john_lower->username, $users[$john_lower->id]->username);
     }
