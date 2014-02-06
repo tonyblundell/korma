@@ -1,4 +1,6 @@
-# Korma - Experimental ORM layer for Moodle
+# Korma
+
+Experimental ORM layer for Moodle
 
 ## How To Use
 
@@ -150,7 +152,7 @@ $emily->last_name => 'Brontë';
 $emily->save();
 ```
 
-Properties can be other objects if 'many to one' relationships are defined.
+Properties can be other objects if many-to-one relationships are defined.
 
 ```php
 $heights = Book::get(array(
@@ -170,7 +172,7 @@ Book::delete(array(
 
 Deletes all books released prior to 1984.
 
-## Working With 'One To Many' Relations
+## Working With One-To-Many Relations
 
 ```php
 $emily->get_related('books');
