@@ -2,7 +2,7 @@
 /*
 Korma - Experimental ORM layer for Moodle
 tonyblundell@gmail.com
-v.0.1.0
+v.0.1.2
  */
 
 defined('MOODLE_INTERNAL') || die();
