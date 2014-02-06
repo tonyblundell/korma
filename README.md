@@ -39,7 +39,7 @@ Unit tests are included. Run them with PHPunit in the usual way.
             );
         }
 
-    You don't have to describe all fields in the database. Just the ones you 
+You don't have to describe all fields in the database. Just the ones you 
 want to use.
 
 ## Retrieving Instances
