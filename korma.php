@@ -1,7 +1,7 @@
 <?php
 /*
 Korma - Experimental ORM layer for Moodle
-tony.blundell@gmail.com
+tonyblundell@gmail.com
 v.0.1.0
  */
 
