@@ -11,7 +11,7 @@ class korma_relations_test extends advanced_testcase {
         $this->gen = $this->getDataGenerator();
     }
 
-    public function xtest_many_to_one_relations() {
+    public function test_many_to_one_relations() {
         // Create users, a course and course completion
         $john = $this->gen->create_user(array('username'=>'john'));
         $paul = $this->gen->create_user(array('username'=>'paul'));
