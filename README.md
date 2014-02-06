@@ -86,18 +86,18 @@ Book::get(array(
 
 Other filters are available:
 
-        *   ieq (case insensitive)
-        *   gt
-        *   gte
-        *   lt
-        *   lte
-        *   startswith
-        *   istartswith
-        *   endswith
-        *   iendswith
-        *   contains
-        *   icontains
-        *   in
+*   ieq (case insensitive)
+*   gt
+*   gte
+*   lt
+*   lte
+*   startswith
+*   istartswith
+*   endswith
+*   iendswith
+*   contains
+*   icontains
+*   in
 
 ## AND-ing Filters
 
@@ -200,7 +200,7 @@ Removes Emily's existing books then adds the ones specified.
 
 All of these functions will accept an array of instances or IDs. 
 
-## Refresh An Instance From The Database
+## Refreshing An Instance From The Database
 
 ```php
 $emily->refresh();
