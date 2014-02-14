@@ -50,7 +50,7 @@ class Model {
         // which is the result of calling reset on an empty array in PHP.
         // See the comments within get_records_sql for details on how the
         // parameters are interpreted.
-        $instances = static::get($clauses, 'id', 0);
+        $instances = static::get($clauses, 'id', 1);
         return reset($instances);
     }
 
