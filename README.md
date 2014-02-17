@@ -126,6 +126,17 @@ Book::get(array(
 
 Returns all that have Javascript *OR* jQuery in the title.
 
+## Selecting Across Tables
+
+```php
+Book::get(array(
+    'title__startswith' => 'A',
+    'author__lastname__startswith' => 'A'
+));
+```
+
+Returns all books where the title and the author's last name start with A.
+
 ## Creating And Saving Instances
 
 ```php
