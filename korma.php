@@ -419,27 +419,32 @@ class Model {
         // Private function for parsing a field clause to SQL.
         // Expects the field to be given in the format fieldname__clausetype.
         // If just a field name is specified, defaults to an equals clause-type.
+        $clauses = array(
+            'eq', 'ieq', 'gt', 'gte', 'lt', 'lte', 'startswith', 'istartswith',
+            'endswith', 'iendswith', 'contains', 'icontains', 'in'
+        );
         $table = static::$table;
-        $exploded = explode('__', $field);
-        $count = count($exploded);
-        $field = $exploded[0];
-        $clause  = $count > 1 ? $exploded[$count-1] : 'eq';
+        $field_parts = array_reverse(explode('__', $field));
+        $clause = in_array($field_parts[0], $clauses) ? array_shift($field_parts) : 'eq';
+        $field = array_shift($field_parts);
+        $rel = $field_parts ? static::$many_to_one_relations[$field_parts[0]]['model'] : false;
+        $table = $rel ? "korma__{$rel::$table}" : 'base';
         switch ($clause) {
-            case 'eq': return "base.$field = '$value'";
-            case 'ieq': return "base.$field ILIKE '$value'";
-            case 'gt': return "base.$field > $value";
-            case 'gte': return "base.$field >= $value";
-            case 'lt': return "base.$field < $value";
-            case 'lte': return "base.$field <= $value";
-            case 'startswith': return "base.$field LIKE '$value%'";
-            case 'istartswith': return "base.$field ILIKE '$value%'";
-            case 'endswith': return "base.$field LIKE '%$value'";
-            case 'iendswith': return "base.$field ILIKE '%$value'";
-            case 'contains': return "base.$field LIKE '%$value%'";
-            case 'icontains': return "base.$field ILIKE '%$value%'";
+            case 'eq': return "$table.$field = '$value'";
+            case 'ieq': return "$table.$field ILIKE '$value'";
+            case 'gt': return "$table.$field > $value";
+            case 'gte': return "$table.$field >= $value";
+            case 'lt': return "$table.$field < $value";
+            case 'lte': return "$table.$field <= $value";
+            case 'startswith': return "$table.$field LIKE '$value%'";
+            case 'istartswith': return "$table.$field ILIKE '$value%'";
+            case 'endswith': return "$table.$field LIKE '%$value'";
+            case 'iendswith': return "$table.$field ILIKE '%$value'";
+            case 'contains': return "$table.$field LIKE '%$value%'";
+            case 'icontains': return "$table.$field ILIKE '%$value%'";
             case 'in':
                 $value = implode("', '", $value);
-                return "base.$field IN ('$value')";
+                return "$table.$field IN ('$value')";
         }
     }
 

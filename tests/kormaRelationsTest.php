@@ -50,6 +50,35 @@ class korma_relations_test extends advanced_testcase {
         $this->assertEquals($paul_from_db, $comp_from_db->user);
     } 
 
+    public function test_select_across_tables() {
+        $john = $this->gen->create_user(array('username'=>'john'));
+        $paul = $this->gen->create_user(array('username'=>'paul'));
+        $help = $this->gen->create_course(array('shortname'=>'Help!'));
+        $girl = $this->gen->create_course(array('shortname'=>'Girl'));
+        $john_help = new CourseCompletion(
+            array('user'=>$john, 'course'=>$help)
+        );
+        $john_help->save();
+        $john_girl = new CourseCompletion(
+            array('user'=>$john, 'course'=>$girl)
+        );
+        $john_girl->save();
+        $paul_help = new CourseCompletion(
+            array('user'=>$paul, 'course'=>$help)
+        );
+        $paul_help->save();
+        $from_db_implicit_clause = CourseCompletion::get(array(
+            'user__username' => 'john'
+        ));
+        $from_db_explicit_clause = CourseCompletion::get(array(
+            'user__username__eq' => 'john'
+        ));
+        $this->assertEquals($from_db_implicit_clause, $from_db_explicit_clause);
+        $this->assertEquals(2, count($from_db_implicit_clause));
+        $this->assertEquals($john_help, $from_db_implicit_clause[$john_help->id]);
+        $this->assertEquals($john_girl, $from_db_implicit_clause[$john_girl->id]);
+    }
+
     public function test_get_related() {
         // Create users, courses and course completions
         $john = $this->gen->create_user(array('username'=>'john'));
