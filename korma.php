@@ -30,8 +30,31 @@ class Model {
     public static function get(
         array $clauses = array(), $order = 'id', $limit = 0, $offset = 0
     ) {
+        $where_sql = static::generate_sql_where_clause($clauses);
+        return static::get_raw($where_sql, $order, $limit, $offset);
+    }
+
+    /**
+     * Gets all matching rows from the database then returns as an array
+     * of instances of this class.
+     * See the comments within get_records_sql for details on how the
+     * parameters are interpreted.
+     * Similar to static::get, but takes raw SQL for the where clause, for
+     * queries that are too complex to be specified with an array of abstracted
+     * clauses.
+     *
+     * @param array $clauses A raw SQL where clause;
+     * @param string $order  The ORDER BY column of the query
+     * @param int $limit     The number of records to return
+     * @param int $offset    The offset from the start of the table to start the query.
+     *
+     * @return array[Model] An array of instances of the underlying model.
+     */
+    public static function get_raw(
+        $where_sql = '', $order = 'id', $limit = 0, $offset = 0
+    ) {
         global $DB;
-        $sql = static::generate_sql($clauses, $order, $limit, $offset);
+        $sql = static::generate_sql($where_sql, $order, $limit, $offset);
         $records = $DB->get_records_sql($sql);
         $instances = array_map(array('static', 'record_to_instance'), $records);
         return $instances;
@@ -55,21 +78,51 @@ class Model {
     }
 
     /**
+     * Returns the first found instance based on the clauses.
+     * Similar to static::get_one, but takes raw SQL for the where clause, for
+     * queries that are too complex to be specified with an array of abstracted
+     * clauses.
+     *
+     * @param string $where_sql A raw SQL where clause.
+     *
+     * @return stdClass An object representing a row of the table.
+     */
+    public static function get_one_raw($where_sql = '') {
+        $instances = static::get_raw($where_sql, 'id', 1);
+        return reset($instances);
+    }
+
+    /**
      * Returns the number of entries that would be returned if the query
      * with the specified clauses is run
-     * 
+     *
      * @param array $clauses A key/value pair array of where clauses
-     * 
+     *
      * @return int The number of records that would be returned.
      */
     public static function count(array $clauses = array()) {
         // See the comments within get_records_sql for details on how the
         // parameters are interpreted.
+        $where_sql = static::generate_sql_where_clause($clauses);
+        return static::count_raw($where_sql);
+    }
+
+    /**
+     * Returns the number of entries that would be returned if the query
+     * with the specified clauses is run
+     * Similar to static::count, but takes raw SQL for the where clause, for
+     * queries that are too complex to be specified with an array of abstracted
+     * clauses.
+     *
+     * @param string $where_sql A raw SQL where clause.
+     *
+     * @return int The number of records that would be returned.
+     */
+    public static function count_raw($where_sql = '') {
         global $DB;
-        $sql_where = static::generate_sql_where_clause($clauses);
         $sql = "SELECT COUNT(*) FROM {" . static::$table ."} AS base ";
-        if ($sql_where) {
-            $sql .= "WHERE $sql_where";
+        if ($where_sql) {
+            $sql .= "WHERE $where_sql";
         }
         return $DB->count_records_sql($sql);
     }
@@ -84,11 +137,24 @@ class Model {
     public static function delete(array $clauses = array()) {
         // See the comments within get_records_sql for details on how the
         // parameters are interpreted.
+        $where_sql = static::generate_sql_where_clause($clauses);
+        $where_sql = preg_replace('/base\./', '', $where_sql);
+        return static::delete_raw($where_sql);
+    }
+
+    /**
+     * Deletes a record specified by the constraints in the clauses passed in.
+     * Similar to static::delete, but takes raw SQL for the where clause, for
+     * queries that are too complex to be specified with an array of abstracted
+     * clauses.
+     *
+     * @param string $where_sql A raw SQL where clause.
+     *
+     * @return boolean TRUE always.
+     */
+    public static function delete_raw($where_sql = '') {
         global $DB;
-        $clauses_sql = static::generate_sql_where_clause($clauses);
-        $clauses_sql = preg_replace('/^WHERE/', '', $clauses_sql);
-        $clauses_sql = preg_replace('/base\./', '', $clauses_sql);
-        return $DB->delete_records_select(static::$table, $clauses_sql);
+        return $DB->delete_records_select(static::$table, $where_sql);
     }
 
     /**
@@ -262,7 +328,7 @@ class Model {
      * 
      * @return string A valid SQL statement
      */ 
-    private static function generate_sql(array $clauses, $order, $limit, $offset) {
+    private static function generate_sql($where_sql, $order, $limit, $offset) {
         // Private function for generating the SQL select clause.
         // Clauses must be an array. Items in the array are AND-ed together,
         // if an array of arrays is specified, the arrays are OR-ed.
@@ -275,10 +341,6 @@ class Model {
         // name is preceded by a minus sign.
         $select_sql = "SELECT ";
         $from_sql = " FROM {" . static::$table . "} AS base ";
-        $where_sql = static::generate_sql_where_clause($clauses);
-        if ($where_sql) {
-            $where_sql = "WHERE $where_sql";
-        }
         foreach (static::$fields as $field => $type) {
             $select_sql .= "base.$field AS base__$field, "; 
         }
@@ -291,7 +353,10 @@ class Model {
             }
         }
         $select_sql = rtrim($select_sql, ", ");
-        $sql = "$select_sql $from_sql $where_sql";
+        $sql = "$select_sql $from_sql";
+        if ($where_sql) {
+            $sql = "$sql WHERE $where_sql";
+        }
         if ($order) {
             if (strpos($order, '-') === 0) {
                 $order = substr($order, 1);
