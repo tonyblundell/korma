@@ -116,9 +116,11 @@ Returns all books that have PHP in the title *AND* were published since 2010.
 
 ```php
 Book::get(array(
-    'title__contains' => 'Javascript'
-), array(
-    'title__contains' => 'jQuery'
+    array(
+        'title__contains' => 'Javascript'
+    ), array(
+        'title__contains' => 'jQuery'
+    )
 ));
 ```
 
@@ -209,3 +211,23 @@ $emily->refresh();
 ```
 
 Pulls all fields directly from the database and updates the instance.
+
+## Raw SQL queries
+
+For queries that are too complex to be expressed with the array structure described above, use the following functions which all accept a raw SQL where clause.
+
+```php
+Author::get("lastname = 'Brontë'");
+```
+
+```php
+Author::get_one("lastname = 'Brontë'");
+```
+
+```php
+Author::count("lastname = 'Brontë'");
+```
+
+```php
+Author::delete("lastname = 'Brontë'");
+```

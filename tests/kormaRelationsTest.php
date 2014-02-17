@@ -50,6 +50,35 @@ class korma_relations_test extends advanced_testcase {
         $this->assertEquals($paul_from_db, $comp_from_db->user);
     } 
 
+    public function test_select_across_tables() {
+        $john = $this->gen->create_user(array('username'=>'john'));
+        $paul = $this->gen->create_user(array('username'=>'paul'));
+        $help = $this->gen->create_course(array('shortname'=>'Help!'));
+        $girl = $this->gen->create_course(array('shortname'=>'Girl'));
+        $john_help = new CourseCompletion(
+            array('user'=>$john, 'course'=>$help)
+        );
+        $john_help->save();
+        $john_girl = new CourseCompletion(
+            array('user'=>$john, 'course'=>$girl)
+        );
+        $john_girl->save();
+        $paul_help = new CourseCompletion(
+            array('user'=>$paul, 'course'=>$help)
+        );
+        $paul_help->save();
+        $from_db_implicit_clause = CourseCompletion::get(array(
+            'user__username' => 'john'
+        ));
+        $from_db_explicit_clause = CourseCompletion::get(array(
+            'user__username__eq' => 'john'
+        ));
+        $this->assertEquals($from_db_implicit_clause, $from_db_explicit_clause);
+        $this->assertEquals(2, count($from_db_implicit_clause));
+        $this->assertEquals($john_help, $from_db_implicit_clause[$john_help->id]);
+        $this->assertEquals($john_girl, $from_db_implicit_clause[$john_girl->id]);
+    }
+
     public function test_get_related() {
         // Create users, courses and course completions
         $john = $this->gen->create_user(array('username'=>'john'));
@@ -149,54 +178,6 @@ class korma_relations_test extends advanced_testcase {
         ), $john->get_related('course_completions'));
     }
 
-    public function test_add_related_id() {
-        $john = new User(array('username'=>'john'));
-        $john->save();
-        $paul = new User(array('username'=>'paul'));
-        $paul->save();
-        $help = new Course(array('shortname'=>'Help'));
-        $help->save();
-        $yesterday = new Course(array('shortname'=>'Yesterday'));
-        $yesterday->save();
-        $comp_help = new CourseCompletion(array('user'=>$john, 'course'=>$help));
-        $comp_help->save();
-        $comp_yesterday = new CourseCompletion(array('user'=>$paul, 'course'=>$yesterday));
-        $comp_yesterday->save();
-        $this->assertEquals(array(
-            $comp_help->id => $comp_help
-        ), $john->get_related('course_completions'));
-        $john->add_related('course_completions', $comp_yesterday->id);
-        $comp_yesterday->refresh();
-        $this->assertEquals(array(
-            $comp_help->id => $comp_help,
-            $comp_yesterday->id => $comp_yesterday
-        ), $john->get_related('course_completions'));
-    }
-    
-    public function test_add_related_object() {
-        $john = new User(array('username'=>'john'));
-        $john->save();
-        $paul = new User(array('username'=>'paul'));
-        $paul->save();
-        $help = new Course(array('shortname'=>'Help'));
-        $help->save();
-        $yesterday = new Course(array('shortname'=>'Yesterday'));
-        $yesterday->save();
-        $comp_help = new CourseCompletion(array('user'=>$john, 'course'=>$help));
-        $comp_help->save();
-        $comp_yesterday = new CourseCompletion(array('user'=>$paul, 'course'=>$yesterday));
-        $comp_yesterday->save();
-        $this->assertEquals(array(
-            $comp_help->id => $comp_help
-        ), $john->get_related('course_completions'));
-        $john->add_related('course_completions', $comp_yesterday);
-        $comp_yesterday->refresh();
-        $this->assertEquals(array(
-            $comp_help->id => $comp_help,
-            $comp_yesterday->id => $comp_yesterday
-        ), $john->get_related('course_completions'));
-    }
-
     public function test_add_related_ids() {
         $john = new User(array('username'=>'john'));
         $john->save();
@@ -259,60 +240,6 @@ class korma_relations_test extends advanced_testcase {
         $this->assertEquals(array(
             $comp_help->id => $comp_help,
             $comp_yesterday->id => $comp_yesterday,
-            $comp_girl->id =>$comp_girl
-        ), $john->get_related('course_completions'));
-    }
-
-    public function test_remove_related_id() {
-        $john = new User(array('username'=>'john'));
-        $john->save();
-        $help = new Course(array('shortname'=>'Help'));
-        $help->save();
-        $yesterday = new Course(array('shortname'=>'Yesterday'));
-        $yesterday->save();
-        $girl = new Course(array('shortname'=>'Girl'));
-        $girl->save();
-        $comp_help = new CourseCompletion(array('user'=>$john, 'course'=>$help));
-        $comp_help->save();
-        $comp_yesterday = new CourseCompletion(array('user'=>$john, 'course'=>$yesterday));
-        $comp_yesterday->save();
-        $comp_girl = new CourseCompletion(array('user'=>$john, 'course'=>$girl));
-        $comp_girl->save();
-        $this->assertEquals(array(
-            $comp_help->id => $comp_help,
-            $comp_yesterday->id => $comp_yesterday,
-            $comp_girl->id => $comp_girl
-        ), $john->get_related('course_completions'));
-        $john->remove_related('course_completions', $comp_yesterday->id);
-        $this->assertEquals(array(
-            $comp_help->id => $comp_help,
-            $comp_girl->id =>$comp_girl
-        ), $john->get_related('course_completions'));
-    }
-    
-    public function test_remove_related_object() {
-        $john = new User(array('username'=>'john'));
-        $john->save();
-        $help = new Course(array('shortname'=>'Help'));
-        $help->save();
-        $yesterday = new Course(array('shortname'=>'Yesterday'));
-        $yesterday->save();
-        $girl = new Course(array('shortname'=>'Girl'));
-        $girl->save();
-        $comp_help = new CourseCompletion(array('user'=>$john, 'course'=>$help));
-        $comp_help->save();
-        $comp_yesterday = new CourseCompletion(array('user'=>$john, 'course'=>$yesterday));
-        $comp_yesterday->save();
-        $comp_girl = new CourseCompletion(array('user'=>$john, 'course'=>$girl));
-        $comp_girl->save();
-        $this->assertEquals(array(
-            $comp_help->id => $comp_help,
-            $comp_yesterday->id => $comp_yesterday,
-            $comp_girl->id => $comp_girl
-        ), $john->get_related('course_completions'));
-        $john->remove_related('course_completions', $comp_yesterday);
-        $this->assertEquals(array(
-            $comp_help->id => $comp_help,
             $comp_girl->id =>$comp_girl
         ), $john->get_related('course_completions'));
     }
