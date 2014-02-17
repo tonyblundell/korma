@@ -23,25 +23,6 @@ class korma_delete_test extends advanced_testcase {
         $this->assertEquals(0, count($after));
     }
 
-    /*
-    public function test_get_field_types() {
-        global $DB;
-        $john = $this->gen->create_user(array(
-            'username'=>'john', 'firstname'=>'John', 'lastname'=>'Lennon')
-        );
-        $paul = $this->gen->create_user(array(
-            'username'=>'paul', 'firstname'=>'Paul', 'lastname'=>'McCartney')
-        );
-        $got = User::get();
-        foreach(array($john, $paul) as $beatle) {
-            $this->assertInternalType('integer', $got[$beatle->id]->id);
-            $this->assertInternalType('string', $got[$beatle->id]->username);
-            $this->assertInternalType('string', $got[$beatle->id]->firstname);
-            $this->assertInternalType('string', $got[$beatle->id]->lastname);
-        }
-    }
-     */
-
     public function test_delete_condition_equals() {
         $john_lower = $this->gen->create_user(array('username'=>'john'));
         $john_upper = $this->gen->create_user(array('username'=>'John'));
