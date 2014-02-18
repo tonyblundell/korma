@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <title>Library</title>
+    </head>
+    <body>
+        <h1>Library</h1>
+        {% for id, book in books %}
+        <form method="POST">
+            <span>{{ book.author.firstname}} {{ book.author.lastname }} - {{ book.title }}</span>
+            <input type="hidden" name="bookid" value="{{ book.id }}" />
+            {% if book.is_checkoutable(userid) %}
+                <input type="submit" value="Check out" />
+            {% elseif book.is_returnable(userid) %}
+                <input type="submit" value="Return" />
+            {% else %}
+                <input type="submit" value="Unavailable" disabled />
+            {% endif %}
+        </form>
+        {% endfor %}
+    </body>
+</html>
