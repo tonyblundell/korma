@@ -194,6 +194,8 @@ class Model {
             foreach(static::$many_to_one_relations as $rel_name => $rel) {
                 if (isset($this->{$rel_name})) {
                     $record->{$rel['field']} = $this->{$rel_name}->id;
+                } else {
+                    $record->{$rel['field']} = null;
                 }
             }
         }
@@ -475,6 +477,8 @@ class Model {
                         settype($rel_instance->{$field_name}, $field_type);
                     }
                     $instance->{$rel_name} = $rel_instance;
+                } else {
+                    $instance->{$rel_name} = null;
                 }
             }
         }
