@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/korma_example_plugin/db" VERSION="2014020200" COMMENT="XMLDB file for Moodle local/korma_example_plugin"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+    >
+    <TABLES>
+        <TABLE NAME="local_library_author" COMMENT="Author" NEXT="local_library_book">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="firstname" />
+                <FIELD NAME="firstname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" NEXT="lastname" PREVIOUS="id" />
+                <FIELD NAME="lastname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" />
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+            </KEYS>
+        </TABLE>
+        <TABLE NAME="local_library_book" COMMENT="Book" PREVIOUS="local_plugin_example_author">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="title" />
+                <FIELD NAME="title" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" PREVIOUS="id" />
+                <FIELD NAME="authorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="title" />
+                <FIELD NAME="loaneeid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" PREVIOUS="authorid" />
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+            </KEYS>
+        </TABLE>
+    </TABLES>
+</XMLDB>
