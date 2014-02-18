@@ -346,7 +346,7 @@ class Model {
         }
         foreach (static::$many_to_one_relations as $rel_name => $rel) {
             $rel_table = $rel['model']::$table;
-            $from_sql .= "JOIN {{$rel_table}} AS korma__$rel_name ";
+            $from_sql .= "LEFT OUTER JOIN {{$rel_table}} AS korma__$rel_name ";
             $from_sql .= "ON (korma__{$rel_name}.id = base.{$rel['field']}) ";
             foreach ($rel['model']::$fields as $field => $type) {
                 $select_sql .= "korma__{$rel_name}.$field AS {$rel_name}__$field, ";
@@ -468,12 +468,14 @@ class Model {
         }
         if (isset(static::$many_to_one_relations)) {
             foreach(static::$many_to_one_relations as $rel_name => $rel) {
-                $rel_instance = new $rel['model']();
-                foreach($rel['model']::$fields as $field_name => $field_type) {
-                    $rel_instance->{$field_name} = $record->{"{$rel_name}__$field_name"};
-                    settype($rel_instance->{$field_name}, $field_type);
+                if (isset($record->{"{$rel_name}__id"})) {
+                    $rel_instance = new $rel['model']();
+                    foreach($rel['model']::$fields as $field_name => $field_type) {
+                        $rel_instance->{$field_name} = $record->{"{$rel_name}__$field_name"};
+                        settype($rel_instance->{$field_name}, $field_type);
+                    }
+                    $instance->{$rel_name} = $rel_instance;
                 }
-                $instance->{$rel_name} = $rel_instance;
             }
         }
         return $instance;
