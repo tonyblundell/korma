@@ -242,3 +242,7 @@ Author::count("lastname = 'Brontë'");
 ```php
 Author::delete("lastname = 'Brontë'");
 ```
+
+## Example Plugin
+
+A very basic, Silex-based Moodle local plugin is included in the examples folder.
