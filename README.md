@@ -17,7 +17,7 @@ Unit tests are included. Run them with PHPunit in the usual way.
 class Author extends Model {
     protected static $table = 'author';
     protected static $fields = array(
-        'firstname' => 'string',s
+        'firstname' => 'string',
         'lastname' => 'string'
     );
     protected static $one_to_many_relations = array(
@@ -151,7 +151,7 @@ Creates the book and saves it to the database.
 Can also be written as:
         
 ```php
-$emily = new Book(array(
+$emily = new Author(array(
     'first_name' => 'Emily',
     'last_name' => 'Bronte'
 ));
@@ -228,19 +228,19 @@ Pulls all fields directly from the database and updates the instance.
 For queries that are too complex to be expressed with the array structure described above, use the following functions which all accept a raw SQL where clause.
 
 ```php
-Author::get("lastname = 'Brontë'");
+Author::get_raw("lastname = 'Brontë'");
 ```
 
 ```php
-Author::get_one("lastname = 'Brontë'");
+Author::get_one_raw("lastname = 'Brontë'");
 ```
 
 ```php
-Author::count("lastname = 'Brontë'");
+Author::count_raw("lastname = 'Brontë'");
 ```
 
 ```php
-Author::delete("lastname = 'Brontë'");
+Author::delete_raw("lastname = 'Brontë'");
 ```
 
 ## Example Plugin
